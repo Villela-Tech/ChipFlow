@@ -1,0 +1,14 @@
+// Importa o módulo path para manipulação de caminhos
+const { resolve } = require("path");
+
+// Configuração do Sequelize CLI
+module.exports = {
+  // Caminho para o arquivo de configuração do banco de dados
+  "config": resolve(__dirname, "dist", "config", "database.js"),
+  // Caminho para os modelos do Sequelize
+  "modules-path": resolve(__dirname, "dist", "models"),
+  // Caminho para os arquivos de migração
+  "migrations-path": resolve(__dirname, "dist", "database", "migrations"),
+  // Caminho para os arquivos de seed (dados iniciais)
+  "seeders-path": resolve(__dirname, "dist", "database", "seeds")
+};

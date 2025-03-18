@@ -1,0 +1,27 @@
+{
+  // Configurações do compilador TypeScript
+  "compilerOptions": {
+    // Versão do JavaScript alvo para compilação
+    "target": "es2020",
+    // Sistema de módulos a ser usado
+    "module": "commonjs",
+    // Diretório onde os arquivos compilados serão salvos
+    "outDir": "./dist",
+    // Desativa verificações estritas de tipo
+    "strict": false,
+    // Desativa verificação de inicialização de propriedades
+    "strictPropertyInitialization": false,
+    // Permite importações mais limpas de módulos CommonJS
+    "esModuleInterop": true,
+    // Habilita suporte a decorators (usado para ORM e validação)
+    "experimentalDecorators": true,
+    // Emite metadados para decorators
+    "emitDecoratorMetadata": true,
+    // Pula verificação de tipos em arquivos de declaração
+    "skipLibCheck": true,
+    // Garante consistência na capitalização de nomes de arquivos
+    "forceConsistentCasingInFileNames": true
+  },
+  // Arquivos/diretórios a serem excluídos da compilação
+  "exclude": ["public"]
+}

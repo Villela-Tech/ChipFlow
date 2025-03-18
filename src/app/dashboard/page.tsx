@@ -2,11 +2,43 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+// Importação dinâmica para evitar problemas de SSR com Material UI
+// const QuickUserSetup = dynamic(() => import('@/components/QuickUserSetup'), {
+//   ssr: false,
+//   loading: () => <div className="h-10 bg-gray-200 animate-pulse rounded-md w-64"></div>
+// });
+
+const UserCreationForm = dynamic(() => import('@/components/UserCreationForm'), {
+  ssr: false,
+  loading: () => <div className="h-10 bg-gray-200 animate-pulse rounded-md w-64"></div>
+});
 
 export default function Dashboard() {
+  const router = useRouter();
+  const [token, setToken] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<number>(1); // Valor padrão para companyId
+  
+  useEffect(() => {
+    // Verificar se existe token no localStorage
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken) {
+      setToken(storedToken);
+    }
+    
+    // Buscar informações da empresa (em uma aplicação real)
+    // Aqui estamos apenas simulando um companyId fixo
+  }, []);
+
   const handleCardClick = (type: string) => {
     console.log(`Clicked ${type}`);
-    // Aqui você pode adicionar a navegação para a página específica de cada tipo de chip
+    // Navigate to the connections page for chip-related clicks
+    if (['ativos', 'banidos', 'desconectados', 'livres', 'total'].includes(type)) {
+      router.push('/connections');
+    }
   };
 
   return (
@@ -17,8 +49,8 @@ export default function Dashboard() {
         <Link href="/dashboard" className="p-3 bg-white/10 rounded-lg transition-all hover:scale-110">
           <Image src="/images/casa.png" alt="Home" width={32} height={32} />
         </Link>
-        <Link href="/reports" className="p-3 hover:bg-white/10 rounded-lg transition-all hover:scale-110">
-          <Image src="/images/ChipLogo.png" alt="Reports" width={48} height={48} />
+        <Link href="/connections" className="p-3 hover:bg-white/10 rounded-lg transition-all hover:scale-110">
+          <Image src="/images/ChipLogo.png" alt="Connections" width={48} height={48} />
         </Link>
         <div className="mt-auto">
           <Link href="/profile" className="p-3 hover:bg-white/10 rounded-lg transition-all hover:scale-110">
@@ -29,7 +61,13 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="flex-1 p-12">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8 w-full px-0 py-2 border-0 border-b border-gray-200">Dashboard</h1>
+        <div className="flex justify-between items-center mb-8 w-full px-0 py-2 border-0 border-b border-gray-200">
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+          <div className="flex space-x-3">
+            {token && <UserCreationForm token={token} companyId={companyId} />}
+            {/* {token && <QuickUserSetup token={token} />} */}
+          </div>
+        </div>
         <div className="grid grid-cols-3 gap-10 mb-10">
           {/* Chips Ativos Card */}
           <button 

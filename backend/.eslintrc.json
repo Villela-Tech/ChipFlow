@@ -1,0 +1,56 @@
+{
+  // Ambientes onde o código será executado
+  "env": {
+    "es2021": true, // Suporte a recursos do ES2021
+    "node": true,   // Ambiente Node.js
+    "jest": true    // Ambiente de testes Jest
+  },
+  // Configurações estendidas de outros pacotes
+  "extends": [
+    "airbnb-base",                    // Regras base do Airbnb
+    "plugin:@typescript-eslint/recommended", // Regras recomendadas para TypeScript
+    "prettier/@typescript-eslint",    // Integração com Prettier para TypeScript
+    "plugin:prettier/recommended"     // Regras recomendadas do Prettier
+  ],
+  // Parser para TypeScript
+  "parser": "@typescript-eslint/parser",
+  // Opções do parser
+  "parserOptions": {
+    "ecmaVersion": 12,    // Versão do ECMAScript
+    "sourceType": "module" // Usa módulos ES6
+  },
+  // Plugins adicionais
+  "plugins": ["@typescript-eslint", "prettier"],
+  // Regras personalizadas
+  "rules": {
+    "@typescript-eslint/no-non-null-assertion": "off", // Desativa avisos de asserção não-nula
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "_" } // Ignora variáveis que começam com _
+    ],
+    "import/prefer-default-export": "off", // Permite exportações nomeadas
+    "no-console": "off", // Permite uso de console.log
+    "no-param-reassign": "off", // Permite reatribuição de parâmetros
+    "prettier/prettier": "error", // Força formatação do Prettier
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "ts": "never" // Não requer extensão .ts nas importações
+      }
+    ],
+    "quotes": [
+      1,
+      "double", // Usa aspas duplas
+      {
+        "avoidEscape": true // Permite aspas simples para evitar escape
+      }
+    ]
+  },
+  // Configurações adicionais
+  "settings": {
+    "import/resolver": {
+      "typescript": {} // Resolve importações usando TypeScript
+    }
+  }
+}
