@@ -370,21 +370,16 @@ const QRCodeModal = ({ open, onClose, whatsAppId, companyId, token }: QRCodeModa
           >
             Escaneie o QR Code com seu WhatsApp
           </Typography>
-          <Typography 
-            variant="body2" 
-            color="textSecondary" 
-            gutterBottom 
-            align="center"
-            style={{ marginBottom: "16px" }}
-          >
-            1. Abra o WhatsApp no seu telefone
-            <br />
-            2. Toque em Mais opções (⋮) ou Configurações
-            <br />
-            3. Selecione "Aparelhos conectados" e depois "Conectar um aparelho"
-            <br />
-            4. Aponte a câmera do telefone para este QR code
-          </Typography>
+          <div className="text-center">
+            <p className="text-sm text-gray-500">
+              Escaneie o código QR com o WhatsApp do seu celular para conectar.
+              Use a opção &ldquo;WhatsApp Web&rdquo; nas configurações do aplicativo.
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Após escanear, aguarde alguns segundos para a conexão ser estabelecida.
+              Use a opção &ldquo;WhatsApp Web&rdquo; nas configurações do aplicativo.
+            </p>
+          </div>
           <div style={{ 
             display: "flex", 
             justifyContent: "center", 

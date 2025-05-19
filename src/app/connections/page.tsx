@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { apiService } from '@/services/api';
 import Sidebar from '@/components/Sidebar';
-import Image from 'next/image';
 
 interface WhatsAppConnection {
   name: string;

@@ -51,7 +51,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [API_EMAIL, API_PASSWORD]);
 
   useEffect(() => {
     // Apply filters to stats

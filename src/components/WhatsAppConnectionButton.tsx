@@ -21,6 +21,7 @@ import {
   FormHelperText
 } from '@mui/material';
 import { QRCodeSVG } from 'qrcode.react';
+import Image from 'next/image';
 
 interface WhatsAppConnectionButtonProps {
   token: string;
@@ -491,10 +492,12 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
               {isConnected ? (
                 <>
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-                    <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/150px-WhatsApp.svg.png" 
-                      alt="WhatsApp Logo" 
-                      style={{ width: '80px', height: '80px', marginBottom: '16px' }}
+                    <Image
+                      src="/whatsapp-qr.png"
+                      alt="WhatsApp Logo"
+                      width={80}
+                      height={80}
+                      className="mx-auto"
                     />
                     <Typography variant="h6" color="success.main" gutterBottom>
                       WhatsApp Conectado com Sucesso!

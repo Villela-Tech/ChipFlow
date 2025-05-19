@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_JUS_URL = 'https://apijus.villelatech.com.br';
-const API_VBSENDER_URL = 'https://apivbsender.villelatech.com.br';
+const API_JUS_URL = process.env.NEXT_PUBLIC_API_JUS_URL || 'https://apijus.villelatech.com.br';
+const API_VBSENDER_URL = process.env.NEXT_PUBLIC_API_VBSENDER_URL || 'https://apivbsender.villelatech.com.br';
 
 interface LoginResponse {
   token: string;
@@ -14,6 +14,15 @@ interface WhatsAppConnection {
   number: string;
   status: string;
   source: 'jus' | 'vbsender';
+}
+
+interface APIConnection {
+  name: string;
+  company?: {
+    name: string;
+  };
+  number: string;
+  status: string;
 }
 
 export const apiService = {
@@ -83,7 +92,7 @@ export const apiService = {
           headers: { Authorization: `Bearer ${jusToken}` }
         }).catch(error => {
           console.error('[API] Erro ao buscar conexões JUS:', error.response?.data || error.message);
-          return { data: [] }; // Retorna array vazio em caso de erro
+          return { data: [] };
         }),
 
         axios.post('/api/proxy', {
@@ -92,13 +101,13 @@ export const apiService = {
           headers: { Authorization: `Bearer ${vbsenderToken}` }
         }).catch(error => {
           console.error('[API] Erro ao buscar conexões VBSender:', error.response?.data || error.message);
-          return { data: [] }; // Retorna array vazio em caso de erro
+          return { data: [] };
         })
       ]);
 
       console.log('[API] Processando dados das conexões...');
 
-      const jusData = (jusConnections.data || []).map((conn: any) => ({
+      const jusData = (jusConnections.data || []).map((conn: APIConnection) => ({
         name: conn.name || 'N/A',
         companyName: conn.company?.name || 'N/A',
         number: conn.number || 'N/A',
@@ -106,7 +115,7 @@ export const apiService = {
         source: 'jus' as const
       }));
 
-      const vbsenderData = (vbsenderConnections.data || []).map((conn: any) => ({
+      const vbsenderData = (vbsenderConnections.data || []).map((conn: APIConnection) => ({
         name: conn.name || 'N/A',
         companyName: conn.company?.name || 'N/A',
         number: conn.number || 'N/A',

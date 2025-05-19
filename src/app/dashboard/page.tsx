@@ -20,7 +20,11 @@ const UserCreationForm = dynamic(() => import('@/components/UserCreationForm'), 
 export default function Dashboard() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const [companyId, setCompanyId] = useState<number>(1); // Valor padrão para companyId
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all');
+  const [filteredStats, setFilteredStats] = useState<DashboardStats>(stats);
+  const [companyId] = useState<string | null>(null);
   
   useEffect(() => {
     // Verificar se existe token no localStorage

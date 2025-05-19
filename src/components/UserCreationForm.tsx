@@ -25,6 +25,14 @@ interface UserCreationFormProps {
   onSuccess?: (userData: any) => void;
 }
 
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  company: string;
+}
+
 const UserCreationForm: React.FC<UserCreationFormProps> = ({ 
   token, 
   apiUrl = 'https://apisuporte.villelatech.com.br', 
@@ -282,8 +290,16 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
   };
   
   // Função principal para criação do usuário
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const userData: FormData = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+      role: formData.get('role') as string,
+      company: formData.get('company') as string,
+    };
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -292,13 +308,13 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
       console.log('Iniciando processo de criação de usuário...');
       
       // Validar dados
-      if (!name || !email || !password) {
+      if (!userData.name || !userData.email || !userData.password) {
         setError('Por favor, preencha todos os campos obrigatórios');
         setLoading(false);
         return;
       }
       
-      let userData;
+      let userDataResponse;
       
       // Pular a criação de fila se estiver dando problemas
       if (createNewQueue && newQueueName) {
@@ -319,13 +335,13 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
       
       // Criar o usuário com as filas selecionadas (somente as existentes)
       console.log('Criando usuário com filas selecionadas:', selectedQueueIds);
-      userData = await createUser(selectedQueueIds);
+      userDataResponse = await createUser(selectedQueueIds);
       
-      setSuccess(`Usuário "${name}" criado com sucesso!`);
+      setSuccess(`Usuário "${userData.name}" criado com sucesso!`);
       
       // Chamar callback de sucesso se existir
-      if (onSuccess && userData) {
-        onSuccess(userData);
+      if (onSuccess && userDataResponse) {
+        onSuccess(userDataResponse);
       }
       
       // Resetar formulário após alguns segundos
