@@ -24,11 +24,13 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [filteredStats, setFilteredStats] = useState<DashboardStats>(stats);
+  const API_EMAIL= process.env.API_EMAIL;
+  const API_PASSWORD = process.env.API_PASSWORD;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { jusToken, vbsenderToken } = await apiService.login('admin@admin.com', '123456');
+        const { jusToken, vbsenderToken } = await apiService.login(API_EMAIL as string, API_PASSWORD as string);
         const connections = await apiService.getWhatsAppConnections(jusToken, vbsenderToken);
         
         const newStats = {

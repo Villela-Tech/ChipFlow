@@ -6,6 +6,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { url, method, headers, data } = body;
 
+    if (!url) {
+      return NextResponse.json({ error: 'URL é obrigatória' }, { status: 400 });
+    }
+
     console.log('[PROXY] Iniciando requisição:', {
       url,
       method,
@@ -13,6 +17,7 @@ export async function POST(request: Request) {
       hasData: !!data
     });
 
+    // Adiciona timeout e retry
     const response = await axios({
       url,
       method: method || 'GET',
@@ -22,8 +27,9 @@ export async function POST(request: Request) {
         'Accept': 'application/json',
       },
       data,
-      timeout: 30000, // 30 segundos de timeout
-      validateStatus: () => true,
+      timeout: 30000, // 30 segundos
+      validateStatus: (status) => status < 500, // Rejeita apenas erros 500+
+      maxRedirects: 5
     });
 
     console.log('[PROXY] Resposta recebida:', {
@@ -40,6 +46,15 @@ export async function POST(request: Request) {
         data: response.data,
         headers: response.headers
       });
+
+      return NextResponse.json(
+        {
+          error: response.data?.error || 'Erro na requisição',
+          message: response.data?.message || response.statusText,
+          status: response.status
+        },
+        { status: response.status }
+      );
     }
 
     return NextResponse.json(response.data, {
@@ -54,6 +69,23 @@ export async function POST(request: Request) {
     // Tratamento específico para erros do Axios
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
+      
+      // Timeout
+      if (axiosError.code === 'ECONNABORTED') {
+        return NextResponse.json({
+          error: 'Tempo limite excedido',
+          message: 'A requisição demorou muito para responder. Por favor, tente novamente.'
+        }, { status: 408 });
+      }
+
+      // Erro de rede
+      if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ENOTFOUND') {
+        return NextResponse.json({
+          error: 'Erro de conexão',
+          message: 'Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.'
+        }, { status: 503 });
+      }
+
       return NextResponse.json({
         error: 'Erro na requisição',
         message: axiosError.message,
@@ -64,6 +96,7 @@ export async function POST(request: Request) {
       });
     }
 
+    // Erro genérico
     return NextResponse.json(
       { 
         error: 'Erro interno do servidor',
