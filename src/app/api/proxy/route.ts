@@ -137,19 +137,6 @@ export async function GET(request: NextRequest) {
       const textData = await responseForText.text();
       console.log(`[PROXY] Resposta em texto (${originalResponse.status}):`, textData.substring(0, 200) + (textData.length > 200 ? '...' : ''));
       
-      // Se for texto contendo um QR code, tenta formatá-lo como JSON para facilitar o processamento no front
-      if (textData.includes('qrcode') || url.includes('/whatsapp/')) {
-        try {
-          // Tenta extrair o QR code do texto se possível
-          const qrMatch = textData.match(/"qrcode"\s*:\s*"([^"]+)"/);
-          if (qrMatch && qrMatch[1]) {
-            return NextResponse.json({ qrcode: qrMatch[1] }, { status: 200 });
-          }
-        } catch (e) {
-          console.error('[PROXY] Erro ao tentar extrair QR code do texto:', e);
-        }
-      }
-      
       return new NextResponse(textData, { 
         status: originalResponse.status,
         headers: {
@@ -158,27 +145,12 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    try {
-      const data = await originalResponse.json();
-      console.log(`[PROXY] Resposta JSON (${originalResponse.status}):`, JSON.stringify(data).substring(0, 200) + (JSON.stringify(data).length > 200 ? '...' : ''));
-      return NextResponse.json(data, { status: originalResponse.status });
-    } catch (jsonError) {
-      console.error(`[PROXY] Erro ao parsear JSON:`, jsonError);
-      const textData = await responseForText.text();
-      console.log(`[PROXY] Resposta em texto (${originalResponse.status}):`, textData.substring(0, 200) + (textData.length > 200 ? '...' : ''));
-      
-      return new NextResponse(textData, { 
-        status: originalResponse.status,
-        headers: {
-          'Content-Type': contentType
-        }
-      });
-    }
+    // Se for JSON, retorna o JSON normalmente
+    const jsonData = await originalResponse.json();
+    return NextResponse.json(jsonData, { status: originalResponse.status });
+    
   } catch (error) {
-    console.error('[PROXY] Erro no proxy:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
+    console.error('[PROXY] Erro na requisição:', error);
+    return NextResponse.json({ error: 'Erro ao processar a requisição' }, { status: 500 });
   }
 } 

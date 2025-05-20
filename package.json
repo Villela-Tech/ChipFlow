@@ -14,12 +14,9 @@
     "@headlessui/react": "^2.2.3",
     "@heroicons/react": "^2.2.0",
     "@mui/material": "^6.4.8",
-    "@types/qrcode": "^1.5.5",
     "axios": "^1.8.3",
     "dotenv": "^16.4.7",
     "next": "15.2.2",
-    "qrcode": "^1.5.4",
-    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

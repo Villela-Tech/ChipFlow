@@ -20,7 +20,6 @@ import {
   Box,
   FormHelperText
 } from '@mui/material';
-import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
 
 interface WhatsAppConnectionButtonProps {
@@ -34,7 +33,6 @@ interface WhatsAppConnection {
   id: number;
   name: string;
   status: string;
-  qrcode?: string;
   companyId: number;
   queueIds: number[];
 }
@@ -56,22 +54,18 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
   const [isDefault, setIsDefault] = useState(false);
   const [farewellMessage, setFarewellMessage] = useState('Obrigado pelo contato! Em breve retornaremos.');
   
-  // Estados para o processo de QR code
-  const [step, setStep] = useState(1); // 1: formulário, 2: QR code
+  // Estados para o processo de conexão
+  const [step, setStep] = useState(1); // 1: formulário, 2: status
   const [connectionId, setConnectionId] = useState<number | null>(null);
-  const [qrCodeData, setQrCodeData] = useState('');
-  const [remainingSeconds, setRemainingSeconds] = useState(40);
-  const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [statusCheckInterval, setStatusCheckInterval] = useState<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     // Limpar intervalos ao desmontar o componente
     return () => {
-      if (countdownInterval) clearInterval(countdownInterval);
       if (statusCheckInterval) clearInterval(statusCheckInterval);
     };
-  }, [countdownInterval, statusCheckInterval]);
+  }, [statusCheckInterval]);
   
   const handleOpen = async () => {
     setOpen(true);
@@ -83,11 +77,6 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
     setOpen(false);
     
     // Limpar intervalos
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-      setCountdownInterval(null);
-    }
-    
     if (statusCheckInterval) {
       clearInterval(statusCheckInterval);
       setStatusCheckInterval(null);
@@ -101,7 +90,6 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
     setFarewellMessage('Obrigado pelo contato! Em breve retornaremos.');
     setStep(1);
     setConnectionId(null);
-    setQrCodeData('');
     setError(null);
     setIsConnected(false);
   };
@@ -169,7 +157,7 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
             companyId: companyId,
             queueIds: selectedQueueIds,
             farewellMessage: farewellMessage,
-            type: 'baileys' // Assumindo tipo baileys
+            type: 'baileys'
           }
         })
       });
@@ -181,16 +169,13 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
       const data = await response.json();
       console.log('Conexão WhatsApp criada:', data);
       
-      // Salvar o ID da conexão e avançar para a etapa do QR code
+      // Salvar o ID da conexão e avançar para a etapa de status
       setConnectionId(data.id);
-      
-      // Iniciar sessão WhatsApp e buscar QR code
-      await startWhatsAppSession(data.id);
       
       // Iniciar verificação de status
       startStatusCheck(data.id);
       
-      // Avançar para a etapa do QR code
+      // Avançar para a etapa de status
       setStep(2);
       
       // Callback de sucesso se fornecido
@@ -204,105 +189,6 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-  
-  // Iniciar sessão WhatsApp e buscar QR code
-  const startWhatsAppSession = async (id: number) => {
-    try {
-      console.log(`Iniciando sessão WhatsApp para ID ${id}`);
-      const sessionResponse = await fetch('/api/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: `${apiUrl}/whatsappsession/${id}`,
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        })
-      });
-      
-      if (!sessionResponse.ok) {
-        throw new Error('Falha ao iniciar sessão WhatsApp');
-      }
-      
-      // Buscar QR code
-      await fetchQRCode(id);
-      
-      // Iniciar contador para atualização do QR code
-      startQRCodeCountdown(id);
-      
-    } catch (err) {
-      console.error('Erro ao iniciar sessão WhatsApp:', err);
-      setError('Erro ao iniciar sessão WhatsApp. Tente novamente.');
-    }
-  };
-  
-  // Buscar QR code
-  const fetchQRCode = async (id: number) => {
-    try {
-      console.log(`Buscando QR code para conexão ${id}`);
-      const response = await fetch('/api/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: `${apiUrl}/whatsapp/${id}`,
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Falha ao buscar QR code');
-      }
-      
-      const data = await response.json();
-      
-      if (data && data.qrcode) {
-        console.log('QR code encontrado:', data.qrcode.substring(0, 30) + '...');
-        setQrCodeData(data.qrcode);
-        setRemainingSeconds(40);
-      } else if (Array.isArray(data) && data.length > 0 && data[0].qrcode) {
-        console.log('QR code encontrado no array:', data[0].qrcode.substring(0, 30) + '...');
-        setQrCodeData(data[0].qrcode);
-        setRemainingSeconds(40);
-      } else {
-        console.warn('QR code não encontrado nos dados:', data);
-        setError('QR code não disponível. Tente novamente.');
-      }
-    } catch (err) {
-      console.error('Erro ao buscar QR code:', err);
-      setError('Erro ao buscar QR code. Tente novamente.');
-    }
-  };
-  
-  // Iniciar contador para atualização do QR code
-  const startQRCodeCountdown = (id: number) => {
-    // Limpar intervalo anterior se existir
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-    }
-    
-    // Configurar novo intervalo
-    const interval = setInterval(() => {
-      setRemainingSeconds(prev => {
-        if (prev <= 1) {
-          fetchQRCode(id);
-          return 40;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    
-    setCountdownInterval(interval);
   };
   
   // Iniciar verificação periódica de status
@@ -347,16 +233,8 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
       const data = await response.json();
       console.log(`Status da conexão ${id}:`, data);
       
-      // Se estiver conectado, atualizar o estado
       if (data && data.status === 'connected') {
         setIsConnected(true);
-        
-        // Parar o contador de QR code se estiver conectado
-        if (countdownInterval) {
-          clearInterval(countdownInterval);
-          setCountdownInterval(null);
-        }
-        
         // Manter a conexão ativa com ping periódico
         pingConnection(id);
       } else {
@@ -390,23 +268,6 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
     }
   };
   
-  // Reconectar WhatsApp (regenerar QR code)
-  const reconnectWhatsApp = async () => {
-    if (!connectionId) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      await startWhatsAppSession(connectionId);
-    } catch (error) {
-      console.error('Error reconnecting WhatsApp:', error);
-      setError('Erro ao reconectar WhatsApp. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   return (
     <>
       <Button
@@ -429,7 +290,7 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
       
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>
-          {step === 1 ? 'Nova Conexão WhatsApp' : 'Conectar WhatsApp'}
+          {step === 1 ? 'Nova Conexão WhatsApp' : 'Status da Conexão'}
         </DialogTitle>
         
         <DialogContent dividers>
@@ -520,58 +381,9 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
               ) : (
                 <>
                   <Typography variant="body1" sx={{ mb: 3 }}>
-                    Escaneie o QR code abaixo com seu WhatsApp para conectar:
+                    Aguardando conexão do WhatsApp...
                   </Typography>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'center', position: 'relative', mb: 3 }}>
-                    {loading ? (
-                      <CircularProgress size={60} />
-                    ) : qrCodeData ? (
-                      <Box sx={{ position: 'relative', bgcolor: 'white', p: 2, borderRadius: 1, boxShadow: 1 }}>
-                        <QRCodeSVG 
-                          value={qrCodeData} 
-                          size={250}
-                          level="L"
-                          includeMargin={true}
-                        />
-                        <Box 
-                          sx={{ 
-                            position: 'absolute', 
-                            bottom: 8, 
-                            right: 8, 
-                            bgcolor: 'rgba(255,255,255,0.8)',
-                            borderRadius: '50%',
-                            width: 32,
-                            height: 32,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 12,
-                            fontWeight: 'bold',
-                            border: 1,
-                            borderColor: 'divider'
-                          }}
-                        >
-                          {remainingSeconds}
-                        </Box>
-                      </Box>
-                    ) : (
-                      <Typography>QR code não disponível</Typography>
-                    )}
-                  </Box>
-                  
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Instruções:
-                    </Typography>
-                    <ol style={{ textAlign: 'left', paddingLeft: 20 }}>
-                      <li>Abra o WhatsApp no seu celular</li>
-                      <li>Toque em Menu (⋮) ou Configurações</li>
-                      <li>Selecione &quot;Aparelhos conectados&quot;</li>
-                      <li>Toque em &quot;Conectar um aparelho&quot;</li>
-                      <li>Escaneie o QR code acima</li>
-                    </ol>
-                  </Box>
+                  <CircularProgress />
                 </>
               )}
             </Box>
@@ -599,17 +411,6 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
               <Button onClick={handleClose} color="inherit">
                 {isConnected ? 'Fechar' : 'Cancelar'}
               </Button>
-              {!isConnected && (
-                <Button 
-                  onClick={reconnectWhatsApp} 
-                  variant="contained" 
-                  color="primary" 
-                  disabled={loading}
-                  startIcon={loading ? <CircularProgress size={20} /> : null}
-                >
-                  {loading ? 'Gerando...' : 'Gerar Novo QR Code'}
-                </Button>
-              )}
             </>
           )}
         </DialogActions>
