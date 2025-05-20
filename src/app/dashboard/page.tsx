@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { DashboardStats } from "@/types/dashboard";
 
 // Importação dinâmica para evitar problemas de SSR com Material UI
 // const QuickUserSetup = dynamic(() => import('@/components/QuickUserSetup'), {
@@ -20,11 +21,7 @@ const UserCreationForm = dynamic(() => import('@/components/UserCreationForm'), 
 export default function Dashboard() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sourceFilter, setSourceFilter] = useState('all');
-  const [filteredStats, setFilteredStats] = useState<DashboardStats>(stats);
-  const [companyId] = useState<string | null>(null);
+  const [companyId] = useState<number>(1); // Valor padrão para companyId
   
   useEffect(() => {
     // Verificar se existe token no localStorage

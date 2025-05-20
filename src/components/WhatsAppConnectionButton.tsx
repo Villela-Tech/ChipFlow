@@ -27,7 +27,16 @@ interface WhatsAppConnectionButtonProps {
   token: string;
   apiUrl?: string;
   companyId: number;
-  onConnectionCreated?: (connectionData: any) => void;
+  onConnectionCreated?: (connectionData: WhatsAppConnection) => void;
+}
+
+interface WhatsAppConnection {
+  id: number;
+  name: string;
+  status: string;
+  qrcode?: string;
+  companyId: number;
+  queueIds: number[];
 }
 
 const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
@@ -353,8 +362,8 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
       } else {
         setIsConnected(false);
       }
-    } catch (err) {
-      console.error('Erro ao verificar status da conexão:', err);
+    } catch (error) {
+      console.error('Erro ao verificar status da conexão:', error);
     }
   };
   

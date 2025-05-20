@@ -22,7 +22,16 @@ interface UserCreationFormProps {
   token: string;
   apiUrl?: string;
   companyId: number;
-  onSuccess?: (userData: any) => void;
+  onSuccess?: (userData: UserData) => void;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  profile: string;
+  companyId: number;
+  queueIds: number[];
 }
 
 interface FormData {
@@ -272,7 +281,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
         throw new Error(`Falha ao criar usuário (${response.status})`);
       }
       
-      let userData;
+      let userData: UserData;
       try {
         userData = JSON.parse(responseText);
         console.log('Usuário criado com sucesso:', userData);
@@ -314,28 +323,9 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
         return;
       }
       
-      let userDataResponse;
-      
-      // Pular a criação de fila se estiver dando problemas
-      if (createNewQueue && newQueueName) {
-        try {
-          console.log('Tentando criar nova fila:', newQueueName);
-          // Comentando a criação de fila temporariamente
-          // const newQueueId = await createQueue();
-          // if (newQueueId) {
-          //   console.log('Fila criada com ID:', newQueueId);
-          //   userQueueIds.push(newQueueId);
-          // }
-          console.log('Pulando criação de fila, pois está causando erros na API');
-        } catch (queueError) {
-          console.error('Erro ao criar fila, continuando sem ela:', queueError);
-          // Continuamos mesmo com erro na fila
-        }
-      }
-      
       // Criar o usuário com as filas selecionadas (somente as existentes)
       console.log('Criando usuário com filas selecionadas:', selectedQueueIds);
-      userDataResponse = await createUser(selectedQueueIds);
+      const userDataResponse = await createUser(selectedQueueIds);
       
       setSuccess(`Usuário "${userData.name}" criado com sucesso!`);
       

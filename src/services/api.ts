@@ -3,11 +3,6 @@ import axios from 'axios';
 const API_JUS_URL = process.env.NEXT_PUBLIC_API_JUS_URL || 'https://apijus.villelatech.com.br';
 const API_VBSENDER_URL = process.env.NEXT_PUBLIC_API_VBSENDER_URL || 'https://apivbsender.villelatech.com.br';
 
-interface LoginResponse {
-  token: string;
-  // Add other response fields if needed
-}
-
 interface WhatsAppConnection {
   name: string;
   companyName: string;

@@ -201,42 +201,14 @@ const BaileysQRModal: React.FC<BaileysQRModalProps> = ({
       const data = await response.json();
       console.log(`Status da conexão ${qrCode}:`, data);
       
-      // Se estiver desconectado, tenta reiniciar a sessão
-      if (data && (data.status === 'disconnected' || data.status === 'qrcode')) {
-        console.log('Conexão desconectada ou aguardando QR code, reiniciando sessão...');
-        await startWhatsAppSession();
-      } 
-      // Se a conexão estiver pendente, aguarda
-      else if (data && data.status === 'connecting') {
-        console.log('Conexão em andamento, aguardando...');
-      }
-      // Se estiver conectado e o QR code ainda estiver sendo exibido, fecha o modal
-      else if (data && data.status === 'connected' && isOpen) {
+      if (data && data.status === 'connected' && isOpen) {
         console.log('Conexão está ativa, fechando modal de QR code');
         onClose();
-      }
-      // Se estiver conectado, mantém com ping periódico
-      else if (data && data.status === 'connected') {
-        console.log('Conexão ativa, enviando ping para manter a sessão');
-        await fetch(`/api/proxy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            url: `/whatsapp/ping/${qrCode}`,
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${qrCode}`,
-              'Accept': 'application/json'
-            }
-          })
-        });
       }
     } catch (err) {
       console.error('Erro ao verificar status da conexão:', err);
     }
-  }, [qrCode, startWhatsAppSession]);
+  }, [qrCode, isOpen, onClose]);
 
   // Verificar status periodicamente para manter a conexão
   useEffect(() => {
@@ -327,6 +299,17 @@ const BaileysQRModal: React.FC<BaileysQRModalProps> = ({
             <p className="text-sm text-gray-600 mb-2">
               Escaneie o QR code com seu WhatsApp para conectar. O código será atualizado em {remainingSeconds} segundos.
             </p>
+            
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                Escaneie o código QR com o WhatsApp do seu celular para conectar.
+                Use a opção &ldquo;WhatsApp Web&rdquo; nas configurações do aplicativo.
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Após escanear, aguarde alguns segundos para a conexão ser estabelecida.
+                Use a opção &ldquo;WhatsApp Web&rdquo; nas configurações do aplicativo.
+              </p>
+            </div>
             
             <div className="flex flex-col items-center justify-center py-4">
               {loading ? (
