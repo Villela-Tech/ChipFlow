@@ -1,36 +1,27 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import axios from 'axios';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { QRCodeStatus } from '@/types/qrcode';
 
 interface BaileysQRModalProps {
   isOpen: boolean;
   onClose: () => void;
   qrCode: string | null;
-  status: QRCodeStatus;
-  onRetry: () => void;
 }
 
 const BaileysQRModal: React.FC<BaileysQRModalProps> = ({
   isOpen,
   onClose,
-  qrCode,
-  status,
-  onRetry
+  qrCode
 }) => {
   const [qrCodeData, setQrCodeData] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(40);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [isFallbackMode, setIsFallbackMode] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   // Função para iniciar a sessão do WhatsApp
   const startWhatsAppSession = useCallback(async () => {
@@ -358,8 +349,8 @@ const BaileysQRModal: React.FC<BaileysQRModalProps> = ({
             <ol className="text-sm text-gray-600 list-decimal pl-5 space-y-1">
               <li>Abra o WhatsApp no seu celular</li>
               <li>Toque em Menu (⋮) ou Configurações</li>
-              <li>Selecione "Aparelhos conectados"</li>
-              <li>Toque em "Conectar um aparelho"</li>
+              <li>Selecione &quot;Aparelhos conectados&quot;</li>
+              <li>Toque em &quot;Conectar um aparelho&quot;</li>
               <li>Escaneie o QR code acima</li>
             </ol>
           </div>

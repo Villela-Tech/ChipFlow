@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { DashboardStats } from "@/types/dashboard";
 
 // Importação dinâmica para evitar problemas de SSR com Material UI
 // const QuickUserSetup = dynamic(() => import('@/components/QuickUserSetup'), {

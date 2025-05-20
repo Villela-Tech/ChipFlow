@@ -399,7 +399,8 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
     
     try {
       await startWhatsAppSession(connectionId);
-    } catch (err) {
+    } catch (error) {
+      console.error('Error reconnecting WhatsApp:', error);
       setError('Erro ao reconectar WhatsApp. Tente novamente.');
     } finally {
       setLoading(false);
@@ -512,7 +513,7 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
                       WhatsApp Conectado com Sucesso!
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                      A conexão "{connectionName}" está ativa e pronta para uso.
+                      A conexão &quot;{connectionName}&quot; está ativa e pronta para uso.
                     </Typography>
                   </Box>
                 </>
@@ -566,8 +567,8 @@ const WhatsAppConnectionButton: React.FC<WhatsAppConnectionButtonProps> = ({
                     <ol style={{ textAlign: 'left', paddingLeft: 20 }}>
                       <li>Abra o WhatsApp no seu celular</li>
                       <li>Toque em Menu (⋮) ou Configurações</li>
-                      <li>Selecione "Aparelhos conectados"</li>
-                      <li>Toque em "Conectar um aparelho"</li>
+                      <li>Selecione &quot;Aparelhos conectados&quot;</li>
+                      <li>Toque em &quot;Conectar um aparelho&quot;</li>
                       <li>Escaneie o QR code acima</li>
                     </ol>
                   </Box>
