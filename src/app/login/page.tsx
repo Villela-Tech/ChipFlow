@@ -3,18 +3,45 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add login logic here
-    console.log('Login attempt:', { email, password });
-    // Redirect to dashboard after successful login
-    router.push('/dashboard');
+    setLoading(true);
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      
+      // Salvar o token no localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      toast.success('Login realizado com sucesso!');
+      router.push('/dashboard');
+    } catch (error) {
+      toast.error('Email ou senha inválidos');
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,6 +75,7 @@ export default function Login() {
                 className="w-full px-0 py-2 border-0 border-b border-gray-300 focus:outline-none focus:border-[#38BDF8] transition-colors text-lg placeholder:text-gray-400"
                 placeholder="Digite seu email"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -63,6 +91,7 @@ export default function Login() {
                 className="w-full px-0 py-2 border-0 border-b border-gray-300 focus:outline-none focus:border-[#38BDF8] transition-colors text-lg placeholder:text-gray-400"
                 placeholder="Digite sua senha"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -83,9 +112,10 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full bg-[#38BDF8] text-white py-4 rounded-md hover:bg-[#6BD14F]/90 transition-colors font-medium text-lg mt-8 cursor-pointer"
+              className="w-full bg-[#38BDF8] text-white py-4 rounded-md hover:bg-[#6BD14F]/90 transition-colors font-medium text-lg mt-8 cursor-pointer disabled:opacity-50"
+              disabled={loading}
             >
-              Login
+              {loading ? 'Entrando...' : 'Login'}
             </button>
           </form>
         </div>

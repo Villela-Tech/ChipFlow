@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios, { AxiosError } from 'axios';
+// @ts-ignore
+import axiosRetry from 'axios-retry';
+
+// Configure axios-retry
+const axiosInstance = axios.create();
+axiosRetry(axiosInstance, { 
+  retries: 3,
+  retryDelay: (retryCount: number): number => retryCount * 1000,
+  retryCondition: (error: AxiosError): boolean => {
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 502;
+  }
+});
 
 export async function POST(request: Request) {
   try {
@@ -17,8 +29,8 @@ export async function POST(request: Request) {
       hasData: !!data
     });
 
-    // Adiciona timeout e retry
-    const response = await axios({
+    // Configuração do Axios com retry e timeout
+    const response = await axiosInstance({
       url,
       method: method || 'GET',
       headers: {
@@ -51,7 +63,8 @@ export async function POST(request: Request) {
         {
           error: response.data?.error || 'Erro na requisição',
           message: response.data?.message || response.statusText,
-          status: response.status
+          status: response.status,
+          details: response.data // Inclui mais detalhes do erro
         },
         { status: response.status }
       );
@@ -74,7 +87,11 @@ export async function POST(request: Request) {
       if (axiosError.code === 'ECONNABORTED') {
         return NextResponse.json({
           error: 'Tempo limite excedido',
-          message: 'A requisição demorou muito para responder. Por favor, tente novamente.'
+          message: 'A requisição demorou muito para responder. Por favor, tente novamente.',
+          details: {
+            code: axiosError.code,
+            timeout: true
+          }
         }, { status: 408 });
       }
 
@@ -82,15 +99,34 @@ export async function POST(request: Request) {
       if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ENOTFOUND') {
         return NextResponse.json({
           error: 'Erro de conexão',
-          message: 'Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.'
+          message: 'Não foi possível conectar ao servidor. Verifique se o servidor está online e tente novamente.',
+          details: {
+            code: axiosError.code,
+            url: axiosError.config?.url
+          }
         }, { status: 503 });
+      }
+
+      // Erro de proxy/gateway
+      if (axiosError.response?.status === 502) {
+        return NextResponse.json({
+          error: 'Erro de gateway',
+          message: 'O servidor está temporariamente indisponível. Por favor, tente novamente em alguns minutos.',
+          details: {
+            status: 502,
+            url: axiosError.config?.url
+          }
+        }, { status: 502 });
       }
 
       return NextResponse.json({
         error: 'Erro na requisição',
         message: axiosError.message,
-        code: axiosError.code,
-        response: axiosError.response?.data
+        details: {
+          code: axiosError.code,
+          response: axiosError.response?.data,
+          status: axiosError.response?.status
+        }
       }, { 
         status: axiosError.response?.status || 500 
       });
@@ -100,7 +136,10 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { 
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        details: {
+          type: error instanceof Error ? error.name : 'Unknown'
+        }
       },
       { status: 500 }
     );

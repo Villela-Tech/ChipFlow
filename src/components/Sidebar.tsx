@@ -36,6 +36,20 @@ export default function Sidebar() {
         <Image src="/images/ChipLogo.png" alt="Connections" width={48} height={48} />
       </Link>
 
+      {/* Chips Management */}
+      <Link 
+        href="/chips" 
+        className={`p-3 rounded-lg transition-all hover:scale-110 ${
+          pathname === '/chips' ? 'bg-white/10' : 'hover:bg-white/10'
+        }`}
+      >
+        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+          />
+        </svg>
+      </Link>
+
       {/* Profile (at bottom) */}
       <div className="mt-auto">
         <Link 
