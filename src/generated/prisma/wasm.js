@@ -117,8 +117,7 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   ReadUncommitted: 'ReadUncommitted',
   ReadCommitted: 'ReadCommitted',
   RepeatableRead: 'RepeatableRead',
-  Serializable: 'Serializable',
-  Snapshot: 'Snapshot'
+  Serializable: 'Serializable'
 });
 
 exports.Prisma.UserScalarFieldEnum = {
@@ -151,6 +150,24 @@ exports.Prisma.SortOrder = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.UserOrderByRelevanceFieldEnum = {
+  id: 'id',
+  email: 'email',
+  name: 'name',
+  password: 'password',
+  role: 'role',
+  token: 'token'
+};
+
+exports.Prisma.ChipOrderByRelevanceFieldEnum = {
+  id: 'id',
+  number: 'number',
+  status: 'status',
+  operator: 'operator',
+  category: 'category',
+  cid: 'cid'
 };
 
 

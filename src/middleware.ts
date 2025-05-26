@@ -6,13 +6,33 @@ import { authMiddleware } from './middleware/auth';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Add paths that don't require authentication
-const publicPaths = ['/login', '/api/auth/login', '/api/auth/register'];
+const publicPaths = [
+  '/login',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/',
+  '/favicon.ico',
+  '/_next'
+];
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Allow access to public paths
-  if (publicPaths.includes(path)) {
+  // Check if the path is public
+  if (publicPaths.some(publicPath => path.startsWith(publicPath))) {
+    // Se estiver logado e tentar acessar o login, redireciona para o dashboard
+    if (path === '/login') {
+      const token = request.cookies.get('token')?.value;
+      if (token) {
+        try {
+          jwt.verify(token, JWT_SECRET);
+          return NextResponse.redirect(new URL('/dashboard', request.url));
+        } catch (error) {
+          // Token inválido, continua para a página de login
+          return NextResponse.next();
+        }
+      }
+    }
     return NextResponse.next();
   }
 

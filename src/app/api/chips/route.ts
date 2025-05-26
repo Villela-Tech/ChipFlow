@@ -1,72 +1,107 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { executeQuery, getConnection } from '@/lib/db';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
-// Função auxiliar para verificar autenticação
-async function verifyAuth(request: NextRequest) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return null;
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { token },
-  });
-
-  return user;
+interface Chip extends RowDataPacket {
+  id: number;
+  number: string;
+  status: string;
+  operator: string;
+  category: string;
+  cid: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const chips = await prisma.chip.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const chips = await executeQuery<Chip[]>('SELECT * FROM Chip ORDER BY createdAt DESC', []);
     return NextResponse.json(chips);
   } catch (error) {
-    console.error('Failed to fetch chips:', error);
+    console.error('Error fetching chips:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch chips' },
+      { error: 'Failed to fetch chips', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
 }
 
 export async function POST(request: NextRequest) {
+  const connection = await getConnection();
+  
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
+    const data = await request.json();
+    
+    // Validate required fields
+    if (!data.number || !data.operator || !data.category) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Missing required fields' },
+        { status: 400 }
       );
     }
 
-    const data = await request.json();
-    const chip = await prisma.chip.create({
-      data: {
-        number: data.number,
-        status: data.status,
-        operator: data.operator,
-        category: data.category,
-        cid: data.cid,
-      },
-    });
-    return NextResponse.json(chip);
+    // Validate number format
+    const numberPattern = /^\d{10,11}$/;
+    const cleanNumber = data.number.replace(/\D/g, '');
+    if (!numberPattern.test(cleanNumber)) {
+      return NextResponse.json(
+        { error: 'Número de telefone inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Convert status to database format
+    const status = data.status === 'AVAILABLE' ? 'active' : 'inactive';
+
+    // Start transaction
+    await connection.beginTransaction();
+
+    try {
+      // Check if number already exists
+      const [existing] = await connection.execute<Chip[]>(
+        'SELECT id FROM Chip WHERE number = ?',
+        [cleanNumber]
+      );
+
+      if (existing.length > 0) {
+        await connection.rollback();
+        return NextResponse.json(
+          { error: 'Um chip com este número já existe' },
+          { status: 400 }
+        );
+      }
+
+      // Get next ID
+      const [maxResult] = await connection.execute<Chip[]>('SELECT MAX(id) as maxId FROM Chip');
+      const nextId = (maxResult[0]?.maxId || 0) + 1;
+
+      // Insert new chip
+      const [result] = await connection.execute<ResultSetHeader>(
+        `INSERT INTO Chip (id, number, status, operator, category, cid, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [nextId, cleanNumber, status, data.operator, data.category, data.cid || '']
+      );
+
+      // Get the inserted chip
+      const [insertedChips] = await connection.execute<Chip[]>(
+        'SELECT * FROM Chip WHERE id = ?',
+        [nextId]
+      );
+
+      await connection.commit();
+      
+      return NextResponse.json(insertedChips[0]);
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    }
   } catch (error) {
-    console.error('Failed to create chip:', error);
+    console.error('Error creating chip:', error);
     return NextResponse.json(
-      { error: 'Failed to create chip' },
+      { error: 'Failed to create chip', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
+  } finally {
+    connection.release();
   }
 } 

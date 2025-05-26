@@ -1,17 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+simport { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { comparePasswords, generateToken } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+import { generateToken } from '@/lib/auth';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const { email, password } = body;
 
-    // Validar campos obrigatórios
+    // Validar dados obrigatórios
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email e senha são obrigatórios' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Buscar usuário pelo email
@@ -20,46 +19,39 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Credenciais inválidas' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     // Verificar senha
-    const isValidPassword = await comparePasswords(password, user.password);
-
+    const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Credenciais inválidas' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Gerar novo token
-    const token = generateToken();
+    // Verificar se usuário está ativo
+    if (user.status !== 'active') {
+      return NextResponse.json({ error: 'User is inactive' }, { status: 401 });
+    }
 
-    // Atualizar token do usuário
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: { token },
+    // Gerar token
+    const token = await generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
     });
 
     // Retornar dados do usuário e token
     return NextResponse.json({
-      token,
       user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        name: updatedUser.name,
-        role: updatedUser.role,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
       },
+      token,
     });
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

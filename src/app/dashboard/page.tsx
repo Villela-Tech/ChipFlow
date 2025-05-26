@@ -1,10 +1,10 @@
 'use client';
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import Sidebar from "@/components/Sidebar";
 
 // Importação dinâmica para evitar problemas de SSR com Material UI
 // const QuickUserSetup = dynamic(() => import('@/components/QuickUserSetup'), {
@@ -19,19 +19,33 @@ const UserCreationForm = dynamic(() => import('@/components/UserCreationForm'), 
 
 export default function Dashboard() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const [companyId] = useState<number>(1); // Valor padrão para companyId
   
   useEffect(() => {
-    // Verificar se existe token no localStorage
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-      setToken(storedToken);
-    }
-    
-    // Buscar informações da empresa (em uma aplicação real)
-    // Aqui estamos apenas simulando um companyId fixo
-  }, []);
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        router.push('/login');
+        return;
+      }
+      
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const handleCardClick = (type: string) => {
     console.log(`Clicked ${type}`);
@@ -43,21 +57,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#F8FAFC] to-[#E2E8F0]">
-      {/* Sidebar */}
-      <div className="w-20 bg-[#38BDF8] flex flex-col items-center py-6 gap-8 shadow-lg">
-        <Image src="/images/Logo.png" alt="ChipFlow Logo" width={80} height={80} className="mb-8" />
-        <Link href="/dashboard" className="p-3 bg-white/10 rounded-lg transition-all hover:scale-110">
-          <Image src="/images/casa.png" alt="Home" width={32} height={32} />
-        </Link>
-        <Link href="/connections" className="p-3 hover:bg-white/10 rounded-lg transition-all hover:scale-110">
-          <Image src="/images/ChipLogo.png" alt="Connections" width={48} height={48} />
-        </Link>
-        <div className="mt-auto">
-          <Link href="/profile" className="p-3 hover:bg-white/10 rounded-lg transition-all hover:scale-110">
-            <Image src="/images/user.png" alt="Profile" width={32} height={32} />
-          </Link>
-        </div>
-      </div>
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 p-12">

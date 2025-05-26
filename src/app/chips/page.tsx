@@ -1,47 +1,39 @@
 'use client';
 
+import React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload } from 'lucide-react';
-import { parseExcelFile } from '@/lib/excel';
+import { Plus, Upload, Search, Filter, MoreHorizontal, X, Download, Smartphone, Trash2 } from 'lucide-react';
+import { parseExcelFile, exportToExcel, downloadTemplate } from '@/lib/excel';
 import { toast } from 'sonner';
-
-interface ChipData {
-  id?: string;
-  number: string;
-  status: 'AVAILABLE' | 'UNAVAILABLE';
-  operator: 'CLARO' | 'VIVO';
-  category: 'UNAVAILABLE_ACCESS' | 'BANNED' | 'FOR_DELIVERY';
-  cid?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import { ChipTable } from '@/components/ChipTable';
+import { Input } from '@/components/ui/input';
+import { ChipData, ChipStatus, Category } from '@/types/chip';
+import { AddChipModal } from '@/components/AddChipModal';
 
 export default function ChipsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [chips, setChips] = useState<ChipData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const [newChip, setNewChip] = useState<ChipData>({
     number: '',
-    status: 'AVAILABLE',
+    status: 'active',
     operator: 'CLARO',
     category: 'FOR_DELIVERY'
   });
 
   useEffect(() => {
-    // Verificar autenticação
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
     }
-
-    // Carregar chips
     fetchChips();
   }, []);
 
@@ -62,10 +54,25 @@ export default function ChipsPage() {
       if (!response.ok) throw new Error('Failed to fetch chips');
       
       const data = await response.json();
-      setChips(data);
+      
+      // Convert API data to ChipData format
+      const formattedChips: ChipData[] = data.map((chip: any) => ({
+        id: chip.id,
+        number: chip.number,
+        status: chip.status === 'active' ? 'active' as const : 'inactive' as const,
+        operator: chip.operator,
+        category: chip.category as Category,
+        cid: chip.cid,
+        createdAt: chip.createdAt ? new Date(chip.createdAt) : undefined,
+        updatedAt: chip.updatedAt ? new Date(chip.updatedAt) : undefined
+      }));
+      
+      setChips(formattedChips);
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching chips:', error);
       toast.error('Falha ao carregar chips');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,38 +80,44 @@ export default function ChipsPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/chips', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(newChip),
       });
 
-      if (response.status === 401) {
-        router.push('/login');
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add chip');
       }
 
-      if (!response.ok) throw new Error('Failed to add chip');
-
-      const savedChip = await response.json();
-      setChips(prev => [...prev, savedChip]);
+      setChips(prev => [...prev, data]);
       setShowAddForm(false);
       setNewChip({
         number: '',
-        status: 'AVAILABLE',
+        status: 'active',
         operator: 'CLARO',
         category: 'FOR_DELIVERY'
       });
       toast.success('Chip adicionado com sucesso!');
     } catch (error) {
-      toast.error('Falha ao adicionar chip');
+      toast.error(error instanceof Error ? error.message : 'Falha ao adicionar chip');
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportExcel = () => {
+    exportToExcel(chips);
+  };
+
+  const handleImportClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -112,233 +125,131 @@ export default function ChipsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setLoading(true);
     try {
-      const chips = await parseExcelFile(file);
-      const token = localStorage.getItem('token');
+      const importedChips = await parseExcelFile(file);
+      
+      // Send to API
       const response = await fetch('/api/chips/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ chips }),
+        body: JSON.stringify({ chips: importedChips }),
       });
 
-      if (response.status === 401) {
-        router.push('/login');
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to import chips');
       }
 
-      if (!response.ok) throw new Error('Failed to import chips');
+      // Refresh the chips list
+      await fetchChips();
+      
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
 
-      const savedChips = await response.json();
-      setChips(prev => [...prev, ...savedChips]);
       toast.success('Chips importados com sucesso!');
     } catch (error) {
       toast.error('Falha ao importar chips');
       console.error(error);
-    } finally {
-      setLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleDelete = (id: string) => {
+    setChips(prevChips => prevChips.filter(chip => chip.id !== id));
+  };
+
+  const filteredChips = chips.filter(chip => 
+    Object.values(chip).some(value => 
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       <Sidebar />
-      <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Gerenciamento de Chips</h1>
-            <div className="flex gap-4">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept=".xlsx,.xls"
-                className="hidden"
-              />
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-green-500 hover:bg-green-600"
-                disabled={loading}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Importar Excel
-              </Button>
-              <Button 
-                onClick={() => setShowAddForm(true)} 
-                className="bg-blue-500 hover:bg-blue-600"
-                disabled={loading}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Novo Chip
-              </Button>
+      <main className="flex-1">
+        <div className="container mx-auto py-6 px-4">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-gray-900">Controle de Chips</h1>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={downloadTemplate}
+                  className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Baixar Modelo
+                </Button>
+                <Button 
+                  onClick={() => setShowAddForm(true)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Novo Chip
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex-1 w-full sm:max-w-md">
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Buscar em todas as colunas..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10"
+                  />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                />
+                <Button variant="outline" className="flex items-center gap-2" onClick={handleImportClick}>
+                  <Upload className="w-4 h-4" />
+                  Importar
+                </Button>
+                <Button variant="outline" className="flex items-center gap-2" onClick={handleExportExcel}>
+                  <Download className="w-4 h-4" />
+                  Exportar
+                </Button>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filtros
+                </Button>
+              </div>
             </div>
           </div>
 
-          {showAddForm && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8">
-              <h2 className="text-xl font-semibold mb-6">Adicionar Novo Chip</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Número
-                    </label>
-                    <input
-                      type="text"
-                      value={newChip.number}
-                      onChange={(e) => setNewChip({ ...newChip, number: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="(00) 00000-0000"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <select
-                      value={newChip.status}
-                      onChange={(e) => setNewChip({ ...newChip, status: e.target.value as 'AVAILABLE' | 'UNAVAILABLE' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="AVAILABLE">Disponível</option>
-                      <option value="UNAVAILABLE">Indisponível</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Operadora
-                    </label>
-                    <select
-                      value={newChip.operator}
-                      onChange={(e) => setNewChip({ ...newChip, operator: e.target.value as 'CLARO' | 'VIVO' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="CLARO">CLARO</option>
-                      <option value="VIVO">VIVO</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Categoria
-                    </label>
-                    <select
-                      value={newChip.category}
-                      onChange={(e) => setNewChip({ ...newChip, category: e.target.value as 'UNAVAILABLE_ACCESS' | 'BANNED' | 'FOR_DELIVERY' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="FOR_DELIVERY">Para entrega</option>
-                      <option value="UNAVAILABLE_ACCESS">Acesso indisponível</option>
-                      <option value="BANNED">Banido</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CID (opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={newChip.cid || ''}
-                      onChange={(e) => setNewChip({ ...newChip, cid: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Digite o CID"
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddForm(false)}
-                    disabled={loading}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="bg-blue-500 hover:bg-blue-600"
-                    disabled={loading}
-                  >
-                    {loading ? 'Salvando...' : 'Salvar'}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Números
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Operadora
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoria
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CID
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {chips.map((chip) => (
-                  <tr key={chip.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {chip.number}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        chip.status === 'AVAILABLE'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {chip.status === 'AVAILABLE' ? 'Disponível' : 'Indisponível'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        chip.operator === 'CLARO'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {chip.operator}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        chip.category === 'FOR_DELIVERY'
-                          ? 'bg-green-100 text-green-800'
-                          : chip.category === 'BANNED'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-orange-100 text-orange-800'
-                      }`}>
-                        {chip.category === 'FOR_DELIVERY' 
-                          ? 'Para entrega' 
-                          : chip.category === 'BANNED'
-                          ? 'Banido'
-                          : 'Acesso indisponível'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {chip.cid || '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200">
+            <ChipTable chips={filteredChips} onDelete={handleDelete} />
           </div>
         </div>
+
+        <AddChipModal 
+          open={showAddForm} 
+          onOpenChange={setShowAddForm}
+          onSuccess={fetchChips}
+        />
       </main>
     </div>
   );
