@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../../../../generated/prisma';
+// import { PrismaClient } from '../../../../generated/prisma'; // Using prisma from @/lib/prisma instead
+import { prisma } from '@/lib/prisma'; // Corrected import
 import { hashPassword, generateToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient(); // prisma instance already available from @/lib/prisma
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,15 +29,22 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPassword = await hashPassword(password);
-    const token = generateToken();
+    // const token = generateToken(); // Removed incorrect token generation here
 
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
-        token,
+        // token, // Removed token from user creation data
       },
+    });
+
+    // Generate token after user creation
+    const token = await generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role, // user.role will have the default value 'USER'
     });
 
     return NextResponse.json({
