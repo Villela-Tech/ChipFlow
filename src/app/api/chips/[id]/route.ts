@@ -1,25 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-type Props = {
-  params: {
-    id: string;
-  };
-};
-
 export async function DELETE(
-  request: Request,
-  props: Props
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
     const chip = await prisma.chip.delete({
       where: {
-        id: props.params.id,
+        id: params.id,
       },
     });
 
     return NextResponse.json(chip);
   } catch (error) {
+    console.error('Error in DELETE /api/chips/[id]:', error);
     return NextResponse.json(
       { error: 'Erro ao excluir o chip' },
       { status: 500 }
