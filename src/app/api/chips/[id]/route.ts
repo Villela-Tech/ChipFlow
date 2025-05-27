@@ -11,11 +11,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } } // Correctly typing the second argument
+  { params }: { params: Promise<{ id: string }> } // Correctly typing the second argument as a Promise
 ) {
   try {
     // Assuming the context object will have a params property with an id
-    const id = params?.id;
+    const { id } = await params; // Await the promise to get the id
     if (!id) {
       return NextResponse.json(
         { error: 'Missing ID in request parameters' },
