@@ -1,14 +1,11 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { Role, Status, Prisma } from '@prisma/client'; // Changed import again
+import type { User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/auth';
 
-interface RouteContext {
-  params: {
-    id?: string;
-  };
-}
+type Role = 'USER' | 'ADMIN';
+type Status = 'active' | 'inactive';
 
 interface UpdateData {
   name?: string;
@@ -21,7 +18,7 @@ interface UpdateData {
 // PUT /api/users/[id] - Atualizar usuário
 export async function PUT(
   request: NextRequest,
-  context: RouteContext // Using RouteContext interface
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -32,7 +29,7 @@ export async function PUT(
     if (!decoded || decoded.role !== 'admin') { 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const userId = context.params?.id;
+    const { id: userId } = await params;
     if (!userId) {
       return NextResponse.json(
         { error: 'Missing ID in request parameters' },
@@ -83,7 +80,7 @@ export async function PUT(
 // DELETE /api/users/[id] - Deletar usuário
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext // Using RouteContext interface
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -96,7 +93,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = context.params?.id;
+    const { id: userId } = await params;
     if (!userId) {
       return NextResponse.json(
         { error: 'Missing ID in request parameters' },
