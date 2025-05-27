@@ -21,13 +21,6 @@ export default function ChipsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const [newChip, setNewChip] = useState<ChipData>({
-    number: '',
-    status: 'active',
-    operator: 'CLARO',
-    category: 'FOR_DELIVERY'
-  });
-
   const fetchChips = React.useCallback(async () => {
     setLoading(true);
     try {
