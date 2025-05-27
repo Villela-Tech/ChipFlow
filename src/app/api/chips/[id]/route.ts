@@ -3,9 +3,15 @@ import { prisma } from '@/lib/prisma';
 
 // interface RouteParams { params: { id: string } } // Previous attempt removed
 
+interface RouteContext {
+  params: {
+    id?: string;
+  };
+}
+
 export async function DELETE(
   request: NextRequest,
-  context: any // Using any as a temporary workaround for the persistent type issue
+  context: RouteContext // Using RouteContext interface
 ) {
   try {
     // Assuming the context object will have a params property with an id

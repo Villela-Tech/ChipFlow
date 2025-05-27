@@ -1,19 +1,27 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-// import { UserUpdateInput, Role, Status } from '@prisma/client'; // Removing these imports for now
+import { Role, Status, Prisma } from '@prisma/client'; // Changed import again
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/auth';
 
-// interface RouteContext { // Removing this interface
-//   params: {
-//     id?: string;
-//   };
-// }
+interface RouteContext {
+  params: {
+    id?: string;
+  };
+}
+
+interface UpdateData {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: Role;
+  status?: Status;
+}
 
 // PUT /api/users/[id] - Atualizar usuário
 export async function PUT(
   request: NextRequest,
-  context: any // Reverted to any
+  context: RouteContext // Using RouteContext interface
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -42,7 +50,7 @@ export async function PUT(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const updateData: any = {}; // Reverted to any for now
+    const updateData: UpdateData = {}; // Using UpdateData interface
 
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
@@ -75,7 +83,7 @@ export async function PUT(
 // DELETE /api/users/[id] - Deletar usuário
 export async function DELETE(
   request: NextRequest,
-  context: any // Reverted to any
+  context: RouteContext // Using RouteContext interface
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];

@@ -58,7 +58,7 @@ export default function UsersManagement() {
       
       const data = await response.json();
       setUsers(data);
-    } catch (_error) {
+    } catch {
       toast.error('Erro ao carregar usuários');
     } finally {
       setIsLoading(false);
@@ -88,7 +88,7 @@ export default function UsersManagement() {
       setEditingUser(null);
       setFormData({ name: '', email: '', password: '', role: 'user', status: 'active' });
       fetchUsers();
-    } catch (_error) {
+    } catch {
       toast.error('Erro ao salvar usuário');
     }
   };
@@ -121,7 +121,7 @@ export default function UsersManagement() {
 
       toast.success('Usuário excluído com sucesso!');
       fetchUsers();
-    } catch (_error) {
+    } catch {
       toast.error('Erro ao excluir usuário');
     }
   };

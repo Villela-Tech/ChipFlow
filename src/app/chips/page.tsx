@@ -47,7 +47,7 @@ export default function ChipsPage() {
       
       const data = await response.json();
       
-      const formattedChips: ChipData[] = data.map((chip: Record<string, any>) => ({
+      const formattedChips: ChipData[] = data.map((chip: ChipData) => ({
         id: chip.id,
         number: chip.number,
         status: chip.status === 'active' ? 'active' as const : 'inactive' as const,
@@ -75,7 +75,7 @@ export default function ChipsPage() {
     fetchChips();
   }, [fetchChips, router]);
 
-  const _handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {

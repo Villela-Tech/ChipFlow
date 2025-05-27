@@ -24,7 +24,6 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [filteredStats, setFilteredStats] = useState<DashboardStats>(stats);
-  const [_error, _setError] = useState<string | null>(null);
   
   const VB_EMAIL = process.env.NEXT_PUBLIC_VB_EMAIL;
   const VB_PASSWORD = process.env.NEXT_PUBLIC_VB_PASSWORD;
@@ -51,7 +50,6 @@ export default function Dashboard() {
         setFilteredStats(newStats);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        _setError(error instanceof Error ? error.message : 'Erro ao carregar os dados');
       } finally {
         setLoading(false);
       }

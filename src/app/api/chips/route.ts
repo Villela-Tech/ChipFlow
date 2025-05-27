@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       const nextId = (maxResult[0]?.maxId || 0) + 1;
 
       // Insert new chip
-      const [_result] = await connection.execute<ResultSetHeader>(
+      await connection.execute<ResultSetHeader>(
         `INSERT INTO Chip (id, number, status, operator, category, cid, createdAt, updatedAt)
          VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [nextId, cleanNumber, status, data.operator, data.category, data.cid || '']
