@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import type { User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/auth';
 

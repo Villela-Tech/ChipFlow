@@ -75,41 +75,6 @@ export default function ChipsPage() {
     fetchChips();
   }, [fetchChips, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await fetch('/api/chips', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newChip),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to add chip');
-      }
-
-      setChips(prev => [...prev, data]);
-      setShowAddForm(false);
-      setNewChip({
-        number: '',
-        status: 'active',
-        operator: 'CLARO',
-        category: 'FOR_DELIVERY'
-      });
-      toast.success('Chip adicionado com sucesso!');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao adicionar chip');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleExportExcel = () => {
     exportToExcel(chips);
   };
