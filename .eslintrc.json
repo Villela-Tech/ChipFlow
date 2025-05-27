@@ -5,29 +5,16 @@
   ],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
-  "ignorePatterns": [
-    "**/generated/**",
-    "**/*.generated.*",
-    "**/prisma/**",
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/out/**",
-    "src/generated/**",
-    "src/prisma/**",
-    "prisma/**"
-  ],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": ["warn", {
-      "argsIgnorePattern": "^_|^error$",
+      "argsIgnorePattern": "^_|^error$|^crypto$",
       "varsIgnorePattern": "^_",
-      "caughtErrorsIgnorePattern": "^error"
+      "caughtErrorsIgnorePattern": "^_|^error$"
     }],
-    "@typescript-eslint/no-unused-expressions": "off",
+    "@typescript-eslint/no-require-imports": "off",
     "@typescript-eslint/no-this-alias": "off",
-    "@typescript-eslint/no-require-imports": "off"
+    "@typescript-eslint/no-unused-expressions": "off"
   },
   "overrides": [
     {
