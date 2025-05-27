@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/auth';
 
 // PUT /api/users/[id] - Atualizar usuário
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: any
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -19,7 +19,15 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const idString = context.params?.id;
+    if (!idString) {
+      return NextResponse.json(
+        { error: 'Missing ID in request parameters' },
+        { status: 400 }
+      );
+    }
+    const id = parseInt(idString);
+
     const body = await request.json();
     const { name, email, password, role, status } = body;
 
@@ -67,8 +75,8 @@ export async function PUT(
 
 // DELETE /api/users/[id] - Deletar usuário
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: any
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -81,7 +89,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const idString = context.params?.id;
+    if (!idString) {
+      return NextResponse.json(
+        { error: 'Missing ID in request parameters' },
+        { status: 400 }
+      );
+    }
+    const id = parseInt(idString);
 
     // Verificar se usuário existe
     const existingUser = await prisma.user.findUnique({
