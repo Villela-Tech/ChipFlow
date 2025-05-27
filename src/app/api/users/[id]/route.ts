@@ -4,16 +4,16 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/auth';
 
-interface RouteContext {
-  params: {
-    id?: string;
-  };
-}
+// interface RouteContext { // Removing this interface
+//   params: {
+//     id?: string;
+//   };
+// }
 
 // PUT /api/users/[id] - Atualizar usuário
 export async function PUT(
   request: NextRequest,
-  context: RouteContext
+  context: any // Reverted to any
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -75,7 +75,7 @@ export async function PUT(
 // DELETE /api/users/[id] - Deletar usuário
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext
+  context: any // Reverted to any
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
