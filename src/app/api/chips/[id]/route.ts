@@ -1,14 +1,20 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+type Props = {
+  params: {
+    id: string;
+  };
+};
+
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  props: Props
 ) {
   try {
     const chip = await prisma.chip.delete({
       where: {
-        id: params.id,
+        id: props.params.id,
       },
     });
 
