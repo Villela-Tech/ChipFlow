@@ -19,21 +19,20 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const idString = context.params?.id;
-    if (!idString) {
+    const userId = context.params?.id;
+    if (!userId) {
       return NextResponse.json(
         { error: 'Missing ID in request parameters' },
         { status: 400 }
       );
     }
-    const id = parseInt(idString);
 
     const body = await request.json();
     const { name, email, password, role, status } = body;
 
     // Verificar se usuário existe
     const existingUser = await prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
     });
 
     if (!existingUser) {
@@ -55,7 +54,7 @@ export async function PUT(
 
     // Atualizar usuário
     const user = await prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: updateData,
       select: {
         id: true,
@@ -89,18 +88,17 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const idString = context.params?.id;
-    if (!idString) {
+    const userId = context.params?.id;
+    if (!userId) {
       return NextResponse.json(
         { error: 'Missing ID in request parameters' },
         { status: 400 }
       );
     }
-    const id = parseInt(idString);
 
     // Verificar se usuário existe
     const existingUser = await prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
     });
 
     if (!existingUser) {
@@ -109,7 +107,7 @@ export async function DELETE(
 
     // Deletar usuário
     await prisma.user.delete({
-      where: { id },
+      where: { id: userId },
     });
 
     return NextResponse.json({ message: 'User deleted successfully' });
