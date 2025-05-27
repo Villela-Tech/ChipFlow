@@ -1,7 +1,11 @@
-# Generated files
-src/generated/**/*
-src/generated/prisma/**/*
-src/generated/prisma/runtime/**/*
+# Prisma generated files
+**/generated/**
+**/prisma/**
+**/*.generated.*
+src/generated/**
+src/prisma/**
+src/generated/prisma/**
+src/generated/prisma/runtime/**
 src/generated/prisma/wasm.js
 src/generated/prisma/client.js
 src/generated/prisma/default.js
@@ -10,32 +14,41 @@ src/generated/prisma/index-browser.js
 src/generated/prisma/index.d.ts
 src/generated/prisma/runtime/react-native.js
 src/generated/prisma/runtime/wasm.js
-src/generated/prisma/runtime/**/*.js
-src/generated/prisma/**/*.js
-src/generated/prisma/**/*.ts
-src/generated/prisma/**/*.d.ts
-src/generated/prisma/**/*.mjs
-src/generated/prisma/**/*.cjs
-src/generated/prisma/**/*.jsx
-src/generated/prisma/**/*.tsx
-src/generated/**/*.js
-src/generated/**/*.ts
-src/generated/**/*.d.ts
-src/generated/**/*.mjs
-src/generated/**/*.cjs
-src/generated/**/*.jsx
-src/generated/**/*.tsx
 
-# Build directories
-**/node_modules/**
-**/.next/**
-**/dist/**
-**/build/**
-**/out/**
+# Build output
+.next
+out
+dist
+build
+
+# Dependencies
+node_modules
+
+# Prisma specific
+**/prisma/client/**
+**/generated/prisma/**
+**/generated/**
+**/generated/**/*.js
+**/generated/**/*.ts
+**/generated/**/*.d.ts
+**/generated/**/*.mjs
+**/generated/**/*.cjs
+**/generated/**/*.jsx
+**/generated/**/*.tsx
 
 # Environment files
 .env*
 .env.local
 .env.development.local
 .env.test.local
-.env.production.local 
+.env.production.local
+
+# Specific files
+src/generated/prisma/runtime/react-native.js
+src/generated/prisma/runtime/wasm.js
+src/generated/prisma/wasm.js
+src/generated/prisma/client.js
+src/generated/prisma/default.js
+src/generated/prisma/edge.js
+src/generated/prisma/index-browser.js
+src/generated/prisma/index.d.ts 
