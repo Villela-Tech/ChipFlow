@@ -5,12 +5,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload, Search, Filter, MoreHorizontal, X, Download, Smartphone, Trash2 } from 'lucide-react';
+import { Upload, Search, Filter, Download } from 'lucide-react';
 import { parseExcelFile, exportToExcel, downloadTemplate } from '@/lib/excel';
 import { toast } from 'sonner';
 import { ChipTable } from '@/components/ChipTable';
 import { Input } from '@/components/ui/input';
-import { ChipData, ChipStatus, Category } from '@/types/chip';
+import { ChipData, Category } from '@/types/chip';
 import { AddChipModal } from '@/components/AddChipModal';
 
 export default function ChipsPage() {
@@ -28,16 +28,8 @@ export default function ChipsPage() {
     category: 'FOR_DELIVERY'
   });
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    fetchChips();
-  }, []);
-
-  const fetchChips = async () => {
+  const fetchChips = React.useCallback(async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/chips', {
@@ -55,8 +47,7 @@ export default function ChipsPage() {
       
       const data = await response.json();
       
-      // Convert API data to ChipData format
-      const formattedChips: ChipData[] = data.map((chip: any) => ({
+      const formattedChips: ChipData[] = data.map((chip: Record<string, any>) => ({
         id: chip.id,
         number: chip.number,
         status: chip.status === 'active' ? 'active' as const : 'inactive' as const,
@@ -74,9 +65,17 @@ export default function ChipsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+    }
+    fetchChips();
+  }, [fetchChips, router]);
+
+  const _handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {

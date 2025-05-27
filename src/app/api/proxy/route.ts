@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios, { AxiosError } from 'axios';
-// @ts-ignore
 import axiosRetry from 'axios-retry';
 
 // Configure axios-retry

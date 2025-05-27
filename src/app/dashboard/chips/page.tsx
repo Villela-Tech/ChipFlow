@@ -27,15 +27,15 @@ const sampleChips: ChipData[] = [
 ];
 
 export default function ChipsPage() {
-  const handleAddNew = () => {
-    // Implement the add new functionality
-    console.log('Add new chip clicked');
-  };
+  // const handleAddNew = () => { // Removed unused function
+  //   // Implement the add new functionality
+  //   console.log('Add new chip clicked');
+  // };
 
   return (
     <div className="container mx-auto py-8">
       {/* Add a button here if you want to trigger handleAddNew */}
-      {/* Example: <button onClick={handleAddNew}>Add New Chip</button> */}
+      {/* Example: <button>Add New Chip</button> */}
       <ChipTable chips={sampleChips} />
     </div>
   );

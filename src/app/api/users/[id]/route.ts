@@ -1,24 +1,29 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+// import { UserUpdateInput, Role, Status } from '@prisma/client'; // Removing these imports for now
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/auth';
+
+interface RouteContext {
+  params: {
+    id?: string;
+  };
+}
 
 // PUT /api/users/[id] - Atualizar usuário
 export async function PUT(
   request: NextRequest,
-  context: any
+  context: RouteContext
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const decoded = await verifyToken(token);
-    if (!decoded || decoded.role !== 'admin') {
+    if (!decoded || decoded.role !== 'admin') { 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const userId = context.params?.id;
     if (!userId) {
       return NextResponse.json(
@@ -30,29 +35,24 @@ export async function PUT(
     const body = await request.json();
     const { name, email, password, role, status } = body;
 
-    // Verificar se usuário existe
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
     });
-
     if (!existingUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Preparar dados para atualização
-    const updateData: any = {
-      name,
-      email,
-      role,
-      status,
-    };
+    const updateData: any = {}; // Reverted to any for now
 
-    // Se uma nova senha foi fornecida, fazer o hash
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
+    // Simplified assignment; BEWARE: assumes role/status from body are valid enum strings
+    if (role !== undefined) updateData.role = role; 
+    if (status !== undefined) updateData.status = status;
 
-    // Atualizar usuário
     const user = await prisma.user.update({
       where: { id: userId },
       data: updateData,
@@ -75,7 +75,7 @@ export async function PUT(
 // DELETE /api/users/[id] - Deletar usuário
 export async function DELETE(
   request: NextRequest,
-  context: any
+  context: RouteContext
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];

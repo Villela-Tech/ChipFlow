@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+// import Image from 'next/image'; // Removed unused import
+// import Link from 'next/link'; // Removed unused import
 import { toast } from 'sonner';
 import Sidebar from '@/components/Sidebar';
 
@@ -58,7 +58,7 @@ export default function UsersManagement() {
       
       const data = await response.json();
       setUsers(data);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao carregar usuários');
     } finally {
       setIsLoading(false);
@@ -88,7 +88,7 @@ export default function UsersManagement() {
       setEditingUser(null);
       setFormData({ name: '', email: '', password: '', role: 'user', status: 'active' });
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao salvar usuário');
     }
   };
@@ -121,7 +121,7 @@ export default function UsersManagement() {
 
       toast.success('Usuário excluído com sucesso!');
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao excluir usuário');
     }
   };

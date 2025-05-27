@@ -13,7 +13,7 @@ interface Chip extends RowDataPacket {
   updatedAt: Date;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const chips = await executeQuery<Chip[]>('SELECT * FROM Chip ORDER BY createdAt DESC', []);
     return NextResponse.json(chips);
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       const nextId = (maxResult[0]?.maxId || 0) + 1;
 
       // Insert new chip
-      const [result] = await connection.execute<ResultSetHeader>(
+      const [_result] = await connection.execute<ResultSetHeader>(
         `INSERT INTO Chip (id, number, status, operator, category, cid, createdAt, updatedAt)
          VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [nextId, cleanNumber, status, data.operator, data.category, data.cid || '']

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
@@ -20,19 +19,19 @@ const UserCreationForm = dynamic(() => import('@/components/UserCreationForm'), 
 export default function Dashboard() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, _setToken] = useState<string | null>(null);
   const [companyId] = useState<number>(1); // Valor padrão para companyId
   
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem('token');
+      const currentToken = localStorage.getItem('token');
       const user = localStorage.getItem('user');
       
-      if (!token || !user) {
+      if (!currentToken || !user) {
         router.push('/login');
         return;
       }
-      
+      _setToken(currentToken);
       setIsLoading(false);
     };
 
