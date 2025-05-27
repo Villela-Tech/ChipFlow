@@ -6,23 +6,23 @@ import { ChipData } from '@/types/chip';
 const sampleChips: ChipData[] = [
   {
     number: "(11) 99218-9865",
-    status: "Indisponível",
+    status: "inactive",
     operator: "CLARO",
-    category: "Acesso indisponível",
+    category: "UNAVAILABLE_ACCESS",
     cid: "89550531110023360000"
   },
   {
     number: "(51) 98035-5972",
-    status: "Indisponível",
+    status: "inactive",
     operator: "VIVO",
-    category: "Banido",
+    category: "BANNED",
     cid: "89551097271072720000"
   },
   {
     number: "(51) 98059-2643",
-    status: "Disponível",
+    status: "active",
     operator: "VIVO",
-    category: "Para entrega"
+    category: "FOR_DELIVERY"
   }
 ];
 
@@ -34,7 +34,9 @@ export default function ChipsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <ChipTable chips={sampleChips} onAddNew={handleAddNew} />
+      {/* Add a button here if you want to trigger handleAddNew */}
+      {/* Example: <button onClick={handleAddNew}>Add New Chip</button> */}
+      <ChipTable chips={sampleChips} />
     </div>
   );
 } 
