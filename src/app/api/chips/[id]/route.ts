@@ -3,19 +3,19 @@ import { prisma } from '@/lib/prisma';
 
 // interface RouteParams { params: { id: string } } // Previous attempt removed
 
-interface RouteContext {
-  params: {
-    id?: string;
-  };
-}
+// interface RouteContext {  // Removing the custom RouteContext
+//   params: {
+//     id?: string;
+//   };
+// }
 
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext // Using RouteContext interface
+  { params }: { params: { id: string } } // Correctly typing the second argument
 ) {
   try {
     // Assuming the context object will have a params property with an id
-    const id = context.params?.id;
+    const id = params?.id;
     if (!id) {
       return NextResponse.json(
         { error: 'Missing ID in request parameters' },
