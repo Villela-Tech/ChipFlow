@@ -1,5 +1,24 @@
-# Prisma generated files
-src/generated/**/*
-node_modules
-.next
-out 
+# Generated files
+**/generated/**
+**/*.generated.*
+**/prisma/**
+src/generated/**
+src/prisma/**
+prisma/**
+
+# Build output
+.next/**
+dist/**
+build/**
+out/**
+
+# Node modules and cache
+node_modules/**
+.cache/**
+
+# Environment files
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local 

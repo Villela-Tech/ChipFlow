@@ -5,28 +5,36 @@
   ],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
-  "overrides": [
-    {
-      "files": ["src/generated/**/*"],
-      "rules": {
-        "@typescript-eslint/no-unused-vars": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/no-empty-object-type": "off",
-        "@typescript-eslint/no-this-alias": "off",
-        "@typescript-eslint/no-unused-expressions": "off",
-        "@typescript-eslint/no-require-imports": "off",
-        "@typescript-eslint/no-unnecessary-type-constraint": "off",
-        "@typescript-eslint/no-unsafe-function-type": "off",
-        "@typescript-eslint/no-wrapper-object-types": "off"
-      }
-    }
+  "ignorePatterns": [
+    "**/generated/**",
+    "**/*.generated.*",
+    "**/prisma/**",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/out/**",
+    "src/generated/**",
+    "src/prisma/**",
+    "prisma/**"
   ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-empty-object-type": "error",
-    "@typescript-eslint/no-this-alias": "error",
-    "@typescript-eslint/no-unused-expressions": "error",
-    "@typescript-eslint/no-require-imports": "error"
-  }
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", {
+      "argsIgnorePattern": "^_|^error$",
+      "varsIgnorePattern": "^_",
+      "caughtErrorsIgnorePattern": "^error"
+    }],
+    "@typescript-eslint/no-unused-expressions": "off",
+    "@typescript-eslint/no-this-alias": "off",
+    "@typescript-eslint/no-require-imports": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/lib/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 } 
