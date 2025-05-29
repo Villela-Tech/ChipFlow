@@ -1,1 +1,0 @@
-SELECT id, email, name, role, token FROM User WHERE email = 'admin@chipflow.com'; 

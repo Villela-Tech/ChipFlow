@@ -1,42 +1,33 @@
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'chipflow-jwt-secret-key-2024-change-in-production';
 
-interface TokenPayload {
+export interface JWTPayload {
   userId: string;
   email: string;
   role: string;
+  name?: string | null;
 }
 
-export async function verifyToken(token: string): Promise<TokenPayload | null> {
+export async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12;
+  return bcryptjs.hash(password, saltRounds);
+}
+
+export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  return bcryptjs.compare(password, hashedPassword);
+}
+
+export async function generateToken(payload: JWTPayload): Promise<string> {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+}
+
+export function verifyToken(token: string): JWTPayload {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded;
   } catch (error) {
-    console.error('Error verifying token:', error);
-    return null;
+    throw new Error('Invalid token');
   }
-}
-
-export async function generateToken(payload: TokenPayload): Promise<string> {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
-}
-
-export const hashPassword = async (password: string): Promise<string> => {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
-};
-
-export const comparePasswords = async (
-  plainPassword: string,
-  hashedPassword: string
-): Promise<boolean> => {
-  try {
-    return await bcrypt.compare(plainPassword, hashedPassword);
-  } catch (error) {
-    console.error('Error comparing passwords:', error);
-    return false;
-  }
-}; 
+} 

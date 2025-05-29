@@ -50,7 +50,7 @@ npm start
 Crie um arquivo `.env` na pasta `react-app` com:
 
 ```
-REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_API_URL=http://localhost:3000/api
 ```
 
 E um arquivo `.env` na pasta `backend` com as configurações do servidor.

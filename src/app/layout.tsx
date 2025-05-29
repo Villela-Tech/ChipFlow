@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -8,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ChipFlow - Sua Plataforma de Gestão",
-  description: "Plataforma completa para gestão de projetos",
+  title: "ChipFlow - Kanban Board",
+  description: "A modern Kanban board application",
 };
 
 export default function RootLayout({
@@ -25,6 +27,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-screen bg-slate-50 text-slate-900`}>
         {children}
+        <Toaster richColors />
       </body>
     </html>
   )

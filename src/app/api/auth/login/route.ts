@@ -1,57 +1,81 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
-import { generateToken } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { findUserByEmail } from '@/lib/userDb';
+import { verifyPassword, generateToken } from '@/lib/auth';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    console.log('Login attempt started');
+    
+    const { email, password } = await request.json();
+    console.log('Request body parsed:', { email, password: '***' });
 
-    // Validar dados obrigatórios
     if (!email || !password) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      console.log('Missing email or password');
+      return NextResponse.json(
+        { error: 'Email e senha são obrigatórios' },
+        { status: 400 }
+      );
     }
 
-    // Buscar usuário pelo email
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    console.log('Attempting to find user in database:', email);
+    
+    // Buscar usuário no banco usando a função do userDb
+    const user = await findUserByEmail(email);
+
+    console.log('User found:', user ? 'Yes' : 'No');
 
     if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      console.log('User not found');
+      return NextResponse.json(
+        { error: 'Credenciais inválidas' },
+        { status: 401 }
+      );
     }
 
+    console.log('Verifying password');
+    
     // Verificar senha
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    const isPasswordValid = await verifyPassword(password, user.password);
+
+    console.log('Password valid:', isPasswordValid);
+
+    if (!isPasswordValid) {
+      console.log('Invalid password');
+      return NextResponse.json(
+        { error: 'Credenciais inválidas' },
+        { status: 401 }
+      );
     }
 
-    // Verificar se usuário está ativo
-    if (user.status !== 'active') {
-      return NextResponse.json({ error: 'User is inactive' }, { status: 401 });
-    }
+    console.log('Generating token');
 
-    // Gerar token
+    // Gerar token JWT
     const token = await generateToken({
       userId: user.id,
       email: user.email,
       role: user.role,
+      name: user.name,
     });
 
-    // Retornar dados do usuário e token
+    console.log('Token generated successfully');
+
     return NextResponse.json({
+      message: 'Login realizado com sucesso',
+      token,
       user: {
         id: user.id,
-        name: user.name,
         email: user.email,
+        name: user.name,
         role: user.role,
       },
-      token,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Detailed login error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack available');
+    
+    return NextResponse.json(
+      { error: 'Erro interno do servidor', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 } 

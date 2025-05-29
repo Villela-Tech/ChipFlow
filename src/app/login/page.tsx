@@ -1,54 +1,42 @@
 'use client';
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    // Verificar se já está autenticado
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    if (token && user) {
-      router.push('/dashboard');
-    }
-  }, [router]);
+  const searchParams = useSearchParams();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const result = await login(email, password);
 
-      if (!response.ok) {
-        throw new Error('Login failed');
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao fazer login');
       }
 
-      const data = await response.json();
-      
-      // Salvar o token no localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
       toast.success('Login realizado com sucesso!');
-      router.push('/dashboard');
+      
+      // Redirecionar para a página anterior ou para a home
+      const from = searchParams.get('from');
+      if (from && !from.startsWith('/login')) {
+        router.push(from);
+      } else {
+        router.push('/');
+      }
     } catch (error) {
-      toast.error('Email ou senha inválidos');
       console.error('Login error:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
     } finally {
       setLoading(false);
     }
@@ -122,7 +110,7 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full bg-[#38BDF8] text-white py-4 rounded-md hover:bg-[#6BD14F]/90 transition-colors font-medium text-lg mt-8 cursor-pointer disabled:opacity-50"
+              className="w-full bg-[#38BDF8] text-white py-4 rounded-md hover:bg-[#38BDF8]/90 transition-colors font-medium text-lg mt-8 cursor-pointer disabled:opacity-50"
               disabled={loading}
             >
               {loading ? 'Entrando...' : 'Login'}

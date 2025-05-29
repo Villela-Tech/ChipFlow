@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-// import { PrismaClient } from '../../../../generated/prisma'; // Using prisma from @/lib/prisma instead
-import { prisma } from '@/lib/prisma'; // Corrected import
+import { findUserByEmail, createUser } from '@/lib/userDb';
 import { hashPassword, generateToken } from '@/lib/auth';
-
-// const prisma = new PrismaClient(); // prisma instance already available from @/lib/prisma
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,9 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await findUserByEmail(email);
 
     if (existingUser) {
       return NextResponse.json(
@@ -29,31 +24,36 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPassword = await hashPassword(password);
-    // const token = generateToken(); // Removed incorrect token generation here
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        // token, // Removed token from user creation data
-      },
+    // Create user
+    const result = await createUser({
+      email,
+      password: hashedPassword,
+      name,
     });
+
+    // Get the created user to generate token
+    const createdUser = await findUserByEmail(email);
+    
+    if (!createdUser) {
+      throw new Error('Failed to create user');
+    }
 
     // Generate token after user creation
     const token = await generateToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role, // user.role will have the default value 'USER'
+      userId: createdUser.id,
+      email: createdUser.email,
+      role: createdUser.role,
+      name: createdUser.name,
     });
 
     return NextResponse.json({
       token,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        id: createdUser.id,
+        email: createdUser.email,
+        name: createdUser.name,
+        role: createdUser.role,
       },
     });
   } catch (error) {

@@ -1,4 +1,4 @@
-import pool from './db';
+import { pool } from './mysql';
 import { RowDataPacket } from 'mysql2';
 
 export interface Chip extends RowDataPacket {

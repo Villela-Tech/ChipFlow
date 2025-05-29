@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 // import Link from 'next/link'; // Removed unused import
 import { toast } from 'sonner';
 import Sidebar from '@/components/Sidebar';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface User {
   id: number;
@@ -17,6 +19,7 @@ interface User {
 
 export default function UsersManagement() {
   const router = useRouter();
+  const { user: currentUser, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,29 +33,18 @@ export default function UsersManagement() {
   });
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      const user = localStorage.getItem('user');
-      
-      if (!token || !user) {
+    if (!authLoading) {
+      if (!currentUser) {
         router.push('/login');
         return;
       }
-      
       fetchUsers();
-    };
-
-    checkAuth();
-  }, [router]);
+    }
+  }, [currentUser, authLoading, router]);
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await apiGet('/api/users');
       
       if (!response.ok) throw new Error('Failed to fetch users');
       
@@ -68,20 +60,13 @@ export default function UsersManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users';
-      const method = editingUser ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) throw new Error('Failed to save user');
+      if (editingUser) {
+        const response = await apiPut(`/api/users/${editingUser.id}`, formData);
+        if (!response.ok) throw new Error('Failed to update user');
+      } else {
+        const response = await apiPost('/api/users', formData);
+        if (!response.ok) throw new Error('Failed to create user');
+      }
 
       toast.success(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
       setIsModalOpen(false);
@@ -109,14 +94,7 @@ export default function UsersManagement() {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
+      const response = await apiDelete(`/api/users/${userId}`);
       if (!response.ok) throw new Error('Failed to delete user');
 
       toast.success('Usuário excluído com sucesso!');
@@ -126,7 +104,7 @@ export default function UsersManagement() {
     }
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>

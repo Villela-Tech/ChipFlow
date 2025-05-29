@@ -42,6 +42,28 @@ export default function Sidebar() {
         </svg>
       </Link>
 
+      {/* Kanban Board */}
+      <Link 
+        href="/kanban" 
+        className={`p-3 rounded-lg transition-all hover:scale-110 ${
+          pathname === '/kanban' ? 'bg-white/10' : 'hover:bg-white/10'
+        }`}
+      >
+        <svg 
+          className="w-8 h-8 text-white" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth="1.5"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
+        </svg>
+      </Link>
+
       {/* Users Management */}
       <Link 
         href="/users" 

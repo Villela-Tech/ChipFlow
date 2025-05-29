@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { executeQuery, getConnection } from '@/lib/db';
+import { executeQuery, pool } from '@/lib/mysql';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 interface Chip extends RowDataPacket {
@@ -27,7 +27,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const connection = await getConnection();
+  const connection = await pool.getConnection();
   
   try {
     const data = await request.json();
