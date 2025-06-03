@@ -179,75 +179,100 @@ export default function UsersManagement() {
 
         {/* Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-8 max-w-md w-full">
-              <h2 className="text-2xl font-bold mb-6">
-                {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
-              </h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Nome</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#38BDF8] focus:ring-[#38BDF8] sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-transparent"
+                    placeholder="Digite o nome do usuário"
                     required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#38BDF8] focus:ring-[#38BDF8] sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-transparent"
+                    placeholder="Digite o email do usuário"
                     required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Senha</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
                   <input
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#38BDF8] focus:ring-[#38BDF8] sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-transparent"
+                    placeholder={editingUser ? '••••••••' : 'Digite a senha'}
                     required={!editingUser}
+                    minLength={6}
                   />
+                  {!editingUser && (
+                    <p className="mt-1 text-sm text-gray-500">Mínimo de 6 caracteres</p>
+                  )}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Função</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Função</label>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#38BDF8] focus:ring-[#38BDF8] sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-transparent bg-white"
                   >
                     <option value="user">Usuário</option>
-                    <option value="admin">Administrador</option>
+                    {currentUser?.role === 'admin' && (
+                      <option value="admin">Administrador</option>
+                    )}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#38BDF8] focus:ring-[#38BDF8] sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-transparent bg-white"
                   >
                     <option value="active">Ativo</option>
                     <option value="inactive">Inativo</option>
                   </select>
                 </div>
-                <div className="flex justify-end space-x-3 mt-6">
+
+                <div className="flex justify-end gap-3 pt-6">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38BDF8]"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#38BDF8] hover:bg-[#38BDF8]/90"
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#38BDF8] border border-transparent rounded-md hover:bg-[#38BDF8]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38BDF8]"
                   >
                     {editingUser ? 'Salvar' : 'Criar'}
                   </button>

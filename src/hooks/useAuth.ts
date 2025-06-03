@@ -16,14 +16,14 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        let token = localStorage.getItem('token');
+        const token = localStorage.getItem('token');
         console.log('useAuth: Checking token...', token ? 'Token found' : 'No token');
         
-        // Se não há token, criar um token temporário para o bypass
         if (!token) {
-          console.log('useAuth: No token found, creating temporary token for bypass...');
-          token = 'bypass-token-admin';
-          localStorage.setItem('token', token);
+          console.log('useAuth: No token found, user is not authenticated');
+          setUser(null);
+          setLoading(false);
+          return;
         }
 
         console.log('useAuth: Verifying token...');
@@ -39,7 +39,6 @@ export function useAuth() {
           throw new Error(`Invalid token - Status: ${response.status}`);
         }
 
-        // Se chegou até aqui, o token é válido ou está em bypass
         console.log('useAuth: Token is valid, getting user data...');
         const verifyData = await response.json();
         

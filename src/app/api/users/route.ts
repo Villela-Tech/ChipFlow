@@ -9,8 +9,10 @@ interface UserRow extends RowDataPacket {
   name: string;
   email: string;
   password: string;
-  created_at: string;
-  updated_at: string;
+  role: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
 // GET /api/users - Listar todos os usuários
@@ -30,7 +32,7 @@ export async function GET(request: Request) {
 
     try {
       const users = await executeQuery<UserRow[]>(
-        'SELECT id, name, email, created_at, updated_at FROM User'
+        'SELECT id, name, email, createdAt, updatedAt FROM User'
       );
       return NextResponse.json(users);
     } catch (dbError: any) {
@@ -52,8 +54,34 @@ export async function GET(request: Request) {
 // POST /api/users - Criar novo usuário
 export async function POST(request: Request) {
   try {
+    const token = request.headers.get('Authorization')?.split(' ')[1];
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Token não fornecido' }, { status: 401 });
+    }
+
+    const decoded = await verifyToken(token);
+    
+    if (!decoded) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    // Verificar se o usuário atual é admin
+    const [currentUser] = await executeQuery<UserRow[]>(
+      'SELECT role FROM User WHERE id = ?',
+      [decoded.userId]
+    );
+
     const body = await request.json();
-    const { name, email, password } = body;
+    const { name, email, password, role = 'user', status = 'active' } = body;
+
+    // Apenas admins podem criar outros admins
+    if (role === 'admin' && currentUser?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Apenas administradores podem criar outros administradores' },
+        { status: 403 }
+      );
+    }
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -80,12 +108,12 @@ export async function POST(request: Request) {
 
     // Criar novo usuário
     const result = await executeQuery<ResultSetHeader>(
-      'INSERT INTO User (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword]
+      'INSERT INTO User (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, role, status]
     );
 
     const [newUser] = await executeQuery<UserRow[]>(
-      'SELECT id, name, email, created_at, updated_at FROM User WHERE id = ?',
+      'SELECT id, name, email, role, status, createdAt, updatedAt FROM User WHERE id = ?',
       [result.insertId]
     );
 
@@ -164,13 +192,13 @@ export async function PUT(request: Request) {
 
     if (updates.length > 0) {
       await executeQuery(
-        `UPDATE User SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        `UPDATE User SET ${updates.join(', ')}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
         values
       );
     }
 
     const [updatedUser] = await executeQuery<UserRow[]>(
-      'SELECT id, name, email, created_at, updated_at FROM User WHERE id = ?',
+      'SELECT id, name, email, createdAt, updatedAt FROM User WHERE id = ?',
       [decoded.userId]
     );
 

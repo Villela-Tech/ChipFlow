@@ -9,8 +9,8 @@ export interface User extends RowDataPacket {
   password: string;
   role: string;
   token?: string;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Dados de fallback quando o MySQL não está disponível
@@ -21,8 +21,8 @@ const fallbackUsers: User[] = [
     name: 'Administrador',
     password: '$2b$10$6l2EVvxRf/RDwc4YwXhseOR/iayFeS/5v6m8mOg8GDAa./FrAmiPu', // admin123
     role: 'ADMIN',
-    created_at: new Date(),
-    updated_at: new Date()
+    createdAt: new Date(),
+    updatedAt: new Date()
   } as User
 ];
 
