@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../generated/prisma';
+import { executeQuery } from '@/lib/mysql';
+import type { RowDataPacket } from 'mysql2';
 
-const prisma = new PrismaClient();
+interface UserRow extends RowDataPacket {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  token: string | null;
+}
 
 export async function authMiddleware(request: NextRequest) {
   try {
@@ -14,9 +21,10 @@ export async function authMiddleware(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { token },
-    });
+    const [user] = await executeQuery<UserRow[]>(
+      'SELECT * FROM User WHERE token = ?',
+      [token]
+    );
 
     if (!user) {
       return NextResponse.json(

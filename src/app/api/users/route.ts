@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/auth';
 import { executeQuery } from '@/lib/mysql';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { v4 as uuidv4 } from 'uuid';
 
 interface UserRow extends RowDataPacket {
   id: string;
@@ -10,7 +11,6 @@ interface UserRow extends RowDataPacket {
   email: string;
   password: string;
   role: string;
-  status: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
 }
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     );
 
     const body = await request.json();
-    const { name, email, password, role = 'user', status = 'active' } = body;
+    const { name, email, password, role = 'user' } = body;
 
     // Apenas admins podem criar outros admins
     if (role === 'admin' && currentUser?.role !== 'admin') {
@@ -106,15 +106,18 @@ export async function POST(request: Request) {
     // Hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate a UUID for the new user
+    const userId = uuidv4();
+
     // Criar novo usuário
-    const result = await executeQuery<ResultSetHeader>(
-      'INSERT INTO User (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)',
-      [name, email, hashedPassword, role, status]
+    await executeQuery<ResultSetHeader>(
+      'INSERT INTO User (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+      [userId, name, email, hashedPassword, role]
     );
 
     const [newUser] = await executeQuery<UserRow[]>(
-      'SELECT id, name, email, role, status, createdAt, updatedAt FROM User WHERE id = ?',
-      [result.insertId]
+      'SELECT id, name, email, role, createdAt, updatedAt FROM User WHERE id = ?',
+      [userId]
     );
 
     return NextResponse.json(newUser, { status: 201 });
