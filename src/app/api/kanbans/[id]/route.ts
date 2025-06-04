@@ -253,4 +253,52 @@ export async function PUT(
       { status: 500 }
     );
   }
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const { params } = context;
+  const kanbanId = params.id;
+
+  try {
+    let userId = 'admin1'; // Usuário padrão para bypass
+
+    if (!BYPASS_AUTH) {
+      // Pegar o token do header Authorization
+      const headersList = await headers();
+      const authHeader = headersList.get('authorization');
+      const token = authHeader?.replace('Bearer ', '');
+
+      if (!token) {
+        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      }
+
+      // Verificar o token
+      const decoded = verifyToken(token) as JWTPayload;
+      userId = decoded.userId;
+    }
+
+    // Verificar se o kanban existe
+    const kanbans = await executeQuery<RowDataPacket[]>(
+      'SELECT * FROM kanbans WHERE id = ?',
+      [kanbanId]
+    );
+
+    if (!kanbans || kanbans.length === 0) {
+      return NextResponse.json({ error: 'Kanban não encontrado' }, { status: 404 });
+    }
+
+    // Deletar o kanban (as colunas e tarefas serão deletadas automaticamente devido à foreign key CASCADE)
+    await executeQuery('DELETE FROM kanbans WHERE id = ?', [kanbanId]);
+
+    return NextResponse.json({ message: 'Kanban excluído com sucesso' });
+  } catch (error) {
+    console.error('Error deleting kanban:', error);
+    return NextResponse.json(
+      { error: 'Erro ao excluir kanban' },
+      { status: 500 }
+    );
+  }
 } 

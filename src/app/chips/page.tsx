@@ -5,13 +5,14 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Upload, Search, Filter, Download } from 'lucide-react';
+import { Upload, Search, Filter, Download, Plus } from 'lucide-react';
 import { parseExcelFile, exportToExcel, downloadTemplate } from '@/lib/excel';
 import { toast } from 'sonner';
 import { ChipTable } from '@/components/ChipTable';
 import { Input } from '@/components/ui/input';
 import { ChipData, Category } from '@/types/chip';
 import { AddChipModal } from '@/components/AddChipModal';
+import { ImportChipsModal } from '@/components/ImportChipsModal';
 
 export default function ChipsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -20,6 +21,7 @@ export default function ChipsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const fetchChips = React.useCallback(async () => {
     setLoading(true);
@@ -206,6 +208,12 @@ export default function ChipsPage() {
           open={showAddForm} 
           onOpenChange={setShowAddForm}
           onSuccess={fetchChips}
+        />
+
+        <ImportChipsModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={fetchChips}
         />
       </main>
     </div>

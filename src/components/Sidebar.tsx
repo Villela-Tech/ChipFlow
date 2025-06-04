@@ -10,7 +10,18 @@ export default function Sidebar() {
   return (
     <div className="w-20 bg-[#38BDF8] flex flex-col items-center py-6 gap-8 shadow-lg min-h-screen">
       {/* Logo */}
-      <Image src="/images/Logo.png" alt="ChipFlow Logo" width={80} height={80} className="mb-8" />
+      <Link 
+        href="/"
+        className="transition-transform hover:scale-110"
+      >
+        <Image 
+          src="/images/Logo.png" 
+          alt="ChipFlow Logo" 
+          width={80} 
+          height={80} 
+          className="mb-8" 
+        />
+      </Link>
 
       {/* Chip Management */}
       <Link 

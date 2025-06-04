@@ -62,24 +62,42 @@ export default function Dashboard() {
     // Apply filters to stats
     let filteredData = { ...stats };
 
-    if (statusFilter !== 'all' || sourceFilter !== 'all') {
-      const activeMultiplier = statusFilter === 'active' ? 1 : statusFilter === 'inactive' ? 0 : 1;
-      const inactiveMultiplier = statusFilter === 'inactive' ? 1 : statusFilter === 'active' ? 0 : 1;
-      const jusMultiplier = sourceFilter === 'jus' ? 1 : sourceFilter === 'vbsender' ? 0 : 1;
-      const vbsenderMultiplier = sourceFilter === 'vbsender' ? 1 : sourceFilter === 'jus' ? 0 : 1;
-
+    // Filter by status first
+    if (statusFilter !== 'all') {
       filteredData = {
-        ...stats,
-        activeChips: stats.activeChips * activeMultiplier,
-        inactiveChips: stats.inactiveChips * inactiveMultiplier,
-        jusConnections: stats.jusConnections * jusMultiplier,
-        vbsenderConnections: stats.vbsenderConnections * vbsenderMultiplier,
-        totalChips: 
-          (stats.activeChips * activeMultiplier + stats.inactiveChips * inactiveMultiplier) *
-          (sourceFilter === 'all' ? 1 : 0) +
-          (stats.jusConnections * jusMultiplier + stats.vbsenderConnections * vbsenderMultiplier) *
-          (statusFilter === 'all' ? 1 : 0)
+        ...filteredData,
+        activeChips: statusFilter === 'active' ? stats.activeChips : 0,
+        inactiveChips: statusFilter === 'inactive' ? stats.inactiveChips : 0,
+        totalChips: statusFilter === 'active' ? stats.activeChips : 
+                   statusFilter === 'inactive' ? stats.inactiveChips : stats.totalChips
       };
+    }
+
+    // Then filter by source
+    if (sourceFilter !== 'all') {
+      const sourceFilteredTotal = sourceFilter === 'jus' ? stats.jusConnections : 
+                                sourceFilter === 'vbsender' ? stats.vbsenderConnections : stats.totalChips;
+      
+      // If both filters are active, we need to calculate the intersection
+      if (statusFilter !== 'all') {
+        // Get the proportion of active/inactive chips for the selected source
+        const sourceActiveRatio = stats.activeChips / stats.totalChips;
+        const sourceInactiveRatio = stats.inactiveChips / stats.totalChips;
+        
+        filteredData = {
+          ...filteredData,
+          activeChips: statusFilter === 'active' ? Math.round(sourceFilteredTotal * sourceActiveRatio) : 0,
+          inactiveChips: statusFilter === 'inactive' ? Math.round(sourceFilteredTotal * sourceInactiveRatio) : 0,
+          totalChips: Math.round(sourceFilteredTotal * (statusFilter === 'active' ? sourceActiveRatio : sourceInactiveRatio))
+        };
+      } else {
+        filteredData = {
+          ...filteredData,
+          jusConnections: sourceFilter === 'jus' ? stats.jusConnections : 0,
+          vbsenderConnections: sourceFilter === 'vbsender' ? stats.vbsenderConnections : 0,
+          totalChips: sourceFilteredTotal
+        };
+      }
     }
 
     setFilteredStats(filteredData);

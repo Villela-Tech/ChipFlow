@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, BarChart3, Users } from 'lucide-react';
+import { Plus, Calendar, BarChart3, Users, Trash2 } from 'lucide-react';
 import { NewKanbanModal } from '@/components/NewKanbanModal';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { apiGet, apiPost } from '@/lib/api';
+import { apiGet, apiPost, apiDelete } from '@/lib/api';
 import { Loading } from '@/components/ui/loading';
 
 interface Kanban {
@@ -99,6 +99,28 @@ export default function KanbanPage() {
   const handleOpenKanban = (kanbanId: string) => {
     console.log('KanbanPage: Opening kanban:', kanbanId);
     router.push(`/kanban/${kanbanId}`);
+  };
+
+  const handleDeleteKanban = async (e: React.MouseEvent, kanbanId: string) => {
+    e.stopPropagation(); // Prevent opening the kanban when clicking delete
+    
+    if (!confirm('Tem certeza que deseja excluir este kanban? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      const response = await apiDelete(`/api/kanbans/${kanbanId}`);
+      
+      if (!response.ok) {
+        throw new Error('Erro ao excluir kanban');
+      }
+
+      setKanbans(prevKanbans => prevKanbans.filter(k => k.id !== kanbanId));
+      toast.success('Kanban excluído com sucesso!');
+    } catch (error) {
+      console.error('Error deleting kanban:', error);
+      toast.error('Erro ao excluir o kanban');
+    }
   };
 
   if (authLoading || loading) {
@@ -215,7 +237,17 @@ export default function KanbanPage() {
                     <h3 className="text-xl font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
                       {kanban.title}
                     </h3>
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => handleDeleteKanban(e, kanban.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                   
                   {kanban.description && (
