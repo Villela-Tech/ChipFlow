@@ -75,7 +75,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index, onClick, isDrag
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
   const isDueSoon = task.dueDate && !isOverdue && 
-    new Date(task.dueDate).getTime() - new Date().getTime() < 3 * 24 * 60 * 60 * 1000; // 3 dias
+    new Date(task.dueDate).getTime() - new Date().getTime() < 3 * 24 * 60 * 60 * 1000;
 
   return (
     <div

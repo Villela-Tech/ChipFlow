@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { KanbanBoard } from '@/components/KanbanBoard';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Users, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { apiGet } from '@/lib/api';
@@ -24,7 +24,8 @@ export default function KanbanDetailPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [kanbanInfo, setKanbanInfo] = useState<KanbanInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -35,7 +36,11 @@ export default function KanbanDetailPage() {
       
       // Verificar se o ID existe antes de buscar dados
       if (id && typeof id === 'string') {
-        fetchKanbanInfo();
+        fetchKanbanInfo(true);
+        
+        // Configurar atualização automática a cada 30 segundos
+        const intervalId = setInterval(() => fetchKanbanInfo(false), 30000);
+        return () => clearInterval(intervalId);
       } else {
         console.error('ID do kanban não encontrado:', id);
         toast.error('ID do kanban inválido');
@@ -44,13 +49,16 @@ export default function KanbanDetailPage() {
     }
   }, [user, authLoading, id, router]);
 
-  const fetchKanbanInfo = async () => {
+  const fetchKanbanInfo = async (isInitialFetch: boolean) => {
     try {
-      setLoading(true);
-      
-      // Verificação adicional do ID
       if (!id || typeof id !== 'string') {
         throw new Error('ID do kanban inválido');
+      }
+      
+      if (isInitialFetch) {
+        setInitialLoading(true);
+      } else {
+        setIsUpdating(true);
       }
       
       // Tentar buscar informações específicas do kanban
@@ -78,14 +86,20 @@ export default function KanbanDetailPage() {
       
     } catch (error) {
       console.error('Erro ao carregar informações do kanban:', error);
-      toast.error('Erro ao carregar o kanban');
-      router.push('/kanban');
+      if (isInitialFetch) {
+        toast.error('Erro ao carregar o kanban');
+        router.push('/kanban');
+      }
     } finally {
-      setLoading(false);
+      if (isInitialFetch) {
+        setInitialLoading(false);
+      } else {
+        setIsUpdating(false);
+      }
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading || initialLoading) {
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
@@ -105,7 +119,12 @@ export default function KanbanDetailPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         {/* Header do Kanban */}
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-white border-b border-gray-200 p-4 relative">
+          {isUpdating && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500/20">
+              <div className="h-full w-1/3 bg-blue-500 animate-[slide-right_1s_ease-in-out_infinite]" />
+            </div>
+          )}
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <div className="flex items-center gap-4">
               <Button
@@ -128,11 +147,7 @@ export default function KanbanDetailPage() {
 
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm">
-                <Users className="w-4 h-4 mr-2" />
-                Membros
-              </Button>
-              <Button variant="outline" size="sm">
-                <Calendar className="w-4 h-4 mr-2" />
+                <Clock className="w-4 h-4 mr-2" />
                 Atividades
               </Button>
               <Button variant="outline" size="sm">

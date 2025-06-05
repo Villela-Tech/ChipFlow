@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Chip {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Kanban {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  content     String?
+  status      String
+  priority    String
+  kanbanId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  assignee    String?
+  dueDate     DateTime?
+  labels      String?
+  checklist   String?
+} 

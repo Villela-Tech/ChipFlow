@@ -11,127 +11,104 @@ import { toast } from 'sonner';
 import { ChipTable } from '@/components/ChipTable';
 import { Input } from '@/components/ui/input';
 import { ChipData, Category } from '@/types/chip';
-import { AddChipModal } from '@/components/AddChipModal';
+import { ChipModal } from '@/components/ChipModal';
 import { ImportChipsModal } from '@/components/ImportChipsModal';
 
 export default function ChipsPage() {
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [chips, setChips] = useState<ChipData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedChip, setSelectedChip] = useState<ChipData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const [showImportModal, setShowImportModal] = useState(false);
 
-  const fetchChips = React.useCallback(async () => {
-    setLoading(true);
+  useEffect(() => {
+    fetchChips();
+  }, []);
+
+  const fetchChips = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/chips', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.status === 401) {
-        router.push('/login');
-        return;
+      const response = await fetch('/api/chips');
+      if (!response.ok) {
+        throw new Error('Falha ao carregar chips');
       }
-      
-      if (!response.ok) throw new Error('Failed to fetch chips');
-      
       const data = await response.json();
-      
-      const formattedChips: ChipData[] = data.map((chip: ChipData) => ({
-        id: chip.id,
-        number: chip.number,
-        status: chip.status === 'active' ? 'active' as const : 'inactive' as const,
-        operator: chip.operator,
-        category: chip.category as Category,
-        cid: chip.cid,
-        createdAt: chip.createdAt ? new Date(chip.createdAt) : undefined,
-        updatedAt: chip.updatedAt ? new Date(chip.updatedAt) : undefined
-      }));
-      
-      setChips(formattedChips);
+      setChips(data);
     } catch (error) {
-      console.error('Error fetching chips:', error);
-      toast.error('Falha ao carregar chips');
+      toast.error('Erro ao carregar chips');
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-    }
-    fetchChips();
-  }, [fetchChips, router]);
+  const handleDelete = async (id: string) => {
+    const updatedChips = chips.filter(chip => chip.id !== id);
+    setChips(updatedChips);
+  };
 
-  const handleExportExcel = () => {
-    exportToExcel(chips);
+  const handleEdit = (chip: ChipData) => {
+    setSelectedChip(chip);
+    setShowModal(true);
+  };
+
+  const handleAddNew = () => {
+    setSelectedChip(null);
+    setShowModal(true);
   };
 
   const handleImportClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+    setShowImportModal(true);
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      await exportToExcel(chips);
+      toast.success('Arquivo exportado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao exportar arquivo');
+      console.error(error);
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      const importedChips = await parseExcelFile(file);
-      
-      // Send to API
+      const chips = await parseExcelFile(file);
       const response = await fetch('/api/chips/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chips: importedChips }),
+        body: JSON.stringify({ chips }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to import chips');
-      }
-
-      // Refresh the chips list
-      await fetchChips();
-      
-      // Clear the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        throw new Error('Falha ao importar chips');
       }
 
       toast.success('Chips importados com sucesso!');
+      fetchChips();
     } catch (error) {
-      toast.error('Falha ao importar chips');
+      toast.error('Erro ao importar chips');
       console.error(error);
     }
   };
 
-  const handleDelete = (id: string) => {
-    setChips(prevChips => prevChips.filter(chip => chip.id !== id));
-  };
-
-  const filteredChips = chips.filter(chip => 
-    Object.values(chip).some(value => 
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
-
-  if (loading) {
+  const filteredChips = chips.filter(chip => {
+    const searchLower = searchTerm.toLowerCase();
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
+      chip.number.toLowerCase().includes(searchLower) ||
+      chip.status.toLowerCase().includes(searchLower) ||
+      chip.operator.toLowerCase().includes(searchLower) ||
+      chip.category.toLowerCase().includes(searchLower) ||
+      (chip.cid && chip.cid.toLowerCase().includes(searchLower))
     );
-  }
+  });
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
@@ -153,9 +130,10 @@ export default function ChipsPage() {
                   Baixar Modelo
                 </Button>
                 <Button 
-                  onClick={() => setShowAddForm(true)}
+                  onClick={handleAddNew}
                   className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
+                  <Plus className="w-4 h-4 mr-2" />
                   Novo Chip
                 </Button>
               </div>
@@ -200,14 +178,19 @@ export default function ChipsPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-            <ChipTable chips={filteredChips} onDelete={handleDelete} />
+            <ChipTable 
+              chips={filteredChips} 
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
           </div>
         </div>
 
-        <AddChipModal 
-          open={showAddForm} 
-          onOpenChange={setShowAddForm}
+        <ChipModal 
+          open={showModal} 
+          onOpenChange={setShowModal}
           onSuccess={fetchChips}
+          chipToEdit={selectedChip}
         />
 
         <ImportChipsModal

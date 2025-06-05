@@ -123,16 +123,27 @@ export async function executeQuery<T>(query: string, values: any[] = []): Promis
   throw new Error('Max retries reached for database query');
 }
 
-// Manter pool básico para compatibilidade (sem usar)
+// Create a connection pool
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  user: process.env.DB_USER,
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  database: process.env.DB_NAME || 'vile5113_ChipFlow',
   waitForConnections: true,
-  connectionLimit: 1,
+  connectionLimit: 10,
   queueLimit: 0
 });
 
+// Helper function to execute queries
+export async function executeQueryPool<T>(query: string, params?: any[]): Promise<T> {
+  try {
+    const [rows] = await pool.execute(query, params);
+    return rows as T;
+  } catch (error) {
+    console.error('Database query error:', error);
+    throw error;
+  }
+}
+
+// Export the pool for direct access if needed
 export { pool }; 

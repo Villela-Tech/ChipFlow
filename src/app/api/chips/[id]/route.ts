@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { executeQuery } from '@/lib/mysql';
+import { verifyToken } from '@/lib/auth';
 
 // interface RouteParams { params: { id: string } } // Previous attempt removed
 
@@ -9,31 +10,91 @@ import { prisma } from '@/lib/prisma';
 //   };
 // }
 
-export async function DELETE(
+interface ChipRow {
+  id: string;
+  number: string;
+  status: string;
+  operator: string;
+  category: string;
+  cid: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // Correctly typing the second argument as a Promise
+  context: { params: { id: string } }
 ) {
   try {
-    // Assuming the context object will have a params property with an id
-    const { id } = await params; // Await the promise to get the id
-    if (!id) {
+    const chips = await executeQuery<ChipRow[]>(
+      'SELECT * FROM Chip WHERE id = ?',
+      [context.params.id]
+    );
+
+    if (!chips || chips.length === 0) {
       return NextResponse.json(
-        { error: 'Missing ID in request parameters' },
+        { error: 'Chip não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(chips[0]);
+  } catch (error) {
+    console.error('Error fetching chip:', error);
+    return NextResponse.json(
+      { error: 'Erro ao buscar chip' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const body = await request.json();
+    const { number, status, operator, category, cid } = body;
+
+    // Validar dados
+    if (!number || !status || !operator || !category) {
+      return NextResponse.json(
+        { error: 'Dados incompletos' },
         { status: 400 }
       );
     }
 
-    const chip = await prisma.chip.delete({
-      where: {
-        id: id,
-      },
-    });
+    // Atualizar chip no banco de dados
+    const query = `
+      UPDATE Chip 
+      SET number = ?, 
+          status = ?, 
+          operator = ?, 
+          category = ?, 
+          cid = ?,
+          updatedAt = NOW()
+      WHERE id = ?
+    `;
 
-    return NextResponse.json(chip);
+    await executeQuery(query, [number, status, operator, category, cid, params.id]);
+
+    return NextResponse.json({ message: 'Chip atualizado com sucesso' });
   } catch (error) {
-    console.error('Error in DELETE /api/chips/[id]:', error);
+    console.error('Erro ao atualizar chip:', error);
     return NextResponse.json(
-      { error: 'Erro ao excluir o chip' },
+      { error: 'Erro ao atualizar chip' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const query = 'DELETE FROM Chip WHERE id = ?';
+    await executeQuery(query, [params.id]);
+
+    return NextResponse.json({ message: 'Chip excluído com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir chip:', error);
+    return NextResponse.json(
+      { error: 'Erro ao excluir chip' },
       { status: 500 }
     );
   }

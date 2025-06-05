@@ -1,9 +1,10 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { TaskCard } from './TaskCard';
-import { Plus } from 'lucide-react';
+import { Plus, MoreHorizontal } from 'lucide-react';
 import { Task } from '@/types/kanban';
+import { Button } from './ui/button';
 
 interface ColumnProps {
   id: string;
@@ -12,6 +13,8 @@ interface ColumnProps {
   onAddTask: () => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
+  color?: string;
+  tasksCount: number;
   children?: React.ReactNode;
 }
 
@@ -22,22 +25,47 @@ export const Column: React.FC<ColumnProps> = ({
   onAddTask,
   onEditTask,
   onDeleteTask,
+  color,
+  tasksCount,
   children
 }) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id,
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: id,
   });
 
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transition,
+  };
+
   return (
-    <div className="h-full">
-      <div
-        ref={setNodeRef}
-        className={`min-h-[200px] space-y-3 transition-all duration-200 rounded-lg p-2 ${
-          isOver
-            ? 'bg-blue-50/90 ring-2 ring-blue-200 shadow-inner scale-[1.02]'
-            : 'bg-transparent'
-        }`}
-      >
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`flex-1 flex flex-col min-w-[300px] max-w-[320px] bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl ${isDragging ? 'opacity-50' : ''}`}
+    >
+      <div className={`px-5 py-4 ${color} text-white flex items-center justify-between backdrop-blur-lg`}>
+        <div className="flex items-center">
+          <h3 className="font-medium">{title}</h3>
+          <span className="ml-2 bg-white bg-opacity-30 text-white text-xs px-2 py-0.5 rounded-full">
+            {tasksCount}
+          </span>
+        </div>
+        <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-3 max-h-full">
         <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
           {children || tasks.map((task, index) => (
             <TaskCard
