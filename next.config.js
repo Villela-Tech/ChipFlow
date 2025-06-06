@@ -14,21 +14,21 @@ const nextConfig = {
   staticPageGenerationTimeout: 180,
   // Configurações de imagens
   images: {
-    domains: ['localhost'],
     unoptimized: true,
-    loader: 'custom',
-    loaderFile: './image-loader.js'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   // Configurações para o Netlify
   output: 'standalone',
-  // Desabilitar exportação estática
-  trailingSlash: false,
+  distDir: '.next',
   // Configurações de ambiente
   env: {
     NEXT_PUBLIC_URL: process.env.URL || 'http://localhost:3000'
   },
-  // Configurações de assets estáticos
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/_next' : '',
   // Configurações de webpack
   webpack: (config, { dev, isServer }) => {
     // Otimizações apenas para produção
@@ -58,6 +58,10 @@ const nextConfig = {
       };
     }
     return config;
+  },
+  // Configurações experimentais
+  experimental: {
+    serverActions: true,
   }
 }
 
