@@ -10,8 +10,6 @@ const nextConfig = {
   // Otimizações de build
   swcMinify: true,
   poweredByHeader: false,
-  // Aumentar o limite de tempo do build
-  staticPageGenerationTimeout: 180,
   // Configurações de imagens
   images: {
     unoptimized: true,
@@ -23,7 +21,7 @@ const nextConfig = {
     ],
   },
   // Configurações para o Netlify
-  output: 'standalone',
+  output: 'export',
   distDir: '.next',
   // Configurações de ambiente
   env: {
@@ -62,7 +60,15 @@ const nextConfig = {
   // Configurações experimentais
   experimental: {
     serverActions: true,
-  }
+  },
+  // Configurações de assets
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/_next' : '',
+  // Otimizações de compilação
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Configuração de compressão
+  compress: true,
 }
 
 module.exports = nextConfig 
