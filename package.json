@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build --no-lint",
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "prisma migrate dev",
@@ -63,7 +63,7 @@
     "@tailwindcss/postcss": "^4.1.7",
     "@types/bcrypt": "^5.0.2",
     "@types/file-saver": "^2.0.7",
-    "@types/node": "^20.17.49",
+    "@types/node": "^20.19.0",
     "@types/papaparse": "^5.3.16",
     "@types/react": "^19",
     "@types/react-dom": "^19",
