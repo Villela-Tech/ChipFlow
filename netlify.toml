@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = ".next/standalone"
+  publish = ".next"
 
 [build.environment]
   NEXT_TELEMETRY_DISABLED = "1"
@@ -10,6 +10,8 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    skipBuildScript = true
 
 # Configuração correta para arquivos estáticos
 [[headers]]
