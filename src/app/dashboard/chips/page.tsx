@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { ChipTable } from '@/components/ChipTable';
 import { ChipData } from '@/types/chip';

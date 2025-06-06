@@ -9,7 +9,14 @@ const nextConfig = {
   },
   // Otimizações de build
   swcMinify: true,
-  poweredByHeader: false
+  poweredByHeader: false,
+  // Aumentar o limite de tempo do build
+  staticPageGenerationTimeout: 180,
+  // Configurações de imagens
+  images: {
+    domains: ['localhost'],
+    unoptimized: true
+  }
 }
 
 module.exports = nextConfig 
