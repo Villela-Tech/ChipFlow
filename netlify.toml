@@ -10,13 +10,7 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Configurações de desenvolvimento local
-[dev]
-  command = "npm run dev"
-  port = 3000
-  targetPort = 3000
-
-# Redirecionamentos e headers
+# Headers para segurança e cache
 [[headers]]
   for = "/*"
   [headers.values]
@@ -26,13 +20,6 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-# Configuração de funções serverless
-[functions]
-  directory = "netlify/functions"
-  included_files = ["prisma/**", ".env"]
-  node_bundler = "esbuild"
-
-# Cache de assets estáticos
 [[headers]]
   for = "/static/*"
   [headers.values]
@@ -43,13 +30,27 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Redirecionamentos
+# Configuração de funções serverless
+[functions]
+  directory = "netlify/functions"
+  included_files = ["prisma/**", ".env"]
+  node_bundler = "esbuild"
+
+# Redirecionamentos para API
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
 
+# Fallback para o Next.js
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/server"
-  status = 200 
+  status = 200
+  force = true
+
+# Configurações de desenvolvimento local
+[dev]
+  command = "npm run dev"
+  port = 3000
+  targetPort = 3000 

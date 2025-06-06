@@ -16,6 +16,14 @@ const nextConfig = {
   images: {
     domains: ['localhost'],
     unoptimized: true
+  },
+  // Configurações para o Netlify
+  output: 'standalone',
+  // Desabilitar exportação estática
+  trailingSlash: false,
+  // Configurações de ambiente
+  env: {
+    NEXT_PUBLIC_URL: process.env.URL || 'http://localhost:3000'
   }
 }
 
