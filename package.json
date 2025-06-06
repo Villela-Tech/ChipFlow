@@ -43,6 +43,7 @@
     "file-saver": "^2.0.5",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.511.0",
+    "magma": "^0.1.2-rc0",
     "mysql": "^2.18.1",
     "mysql2": "^3.14.1",
     "next": "15.2.2",
