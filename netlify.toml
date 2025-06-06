@@ -6,6 +6,8 @@
   NEXT_TELEMETRY_DISABLED = "1"
   NODE_VERSION = "18"
   NPM_VERSION = "10"
+  NEXT_USE_NETLIFY_EDGE = "true"
+  NEXT_FORCE_EDGE_IMAGES = "true"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -21,13 +23,31 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
 [[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
   for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
-  for = "/_next/static/*"
+  for = "/*.js"
   [headers.values]
+    Content-Type = "application/javascript"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Content-Type = "text/css"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Content-Type = "font/woff2"
     Cache-Control = "public, max-age=31536000, immutable"
 
 # Configuração de funções serverless
@@ -36,11 +56,25 @@
   included_files = ["prisma/**", ".env"]
   node_bundler = "esbuild"
 
+# Redirecionamentos para arquivos estáticos
+[[redirects]]
+  from = "/_next/static/*"
+  to = "/_next/static/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+  force = true
+
 # Redirecionamentos para API
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
+  force = true
 
 # Fallback para o Next.js
 [[redirects]]
