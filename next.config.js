@@ -35,6 +35,22 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Configurações específicas para Netlify
+  target: 'serverless',
+  images: {
+    domains: ['chipflow.villelatech.com.br'],
+    minimumCacheTTL: 60,
+    unoptimized: true
+  },
+  // Otimizações de build
+  swcMinify: true,
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: true,
+  // Configuração de ambiente
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://chipflow.villelatech.com.br/api'
+  }
 }
 
 module.exports = nextConfig 
