@@ -21,7 +21,7 @@ const nextConfig = {
     ],
   },
   // Configurações para o Netlify
-  output: 'export',
+  output: 'standalone',
   distDir: '.next',
   // Configurações de ambiente
   env: {
@@ -62,7 +62,7 @@ const nextConfig = {
     serverActions: true,
   },
   // Configurações de assets
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/_next' : '',
+  assetPrefix: undefined,
   // Otimizações de compilação
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

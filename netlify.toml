@@ -1,11 +1,12 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = ".next/standalone"
 
 [build.environment]
   NEXT_TELEMETRY_DISABLED = "1"
   NODE_VERSION = "18"
   NPM_VERSION = "10"
+  NEXT_PRIVATE_TARGET = "experimental-serverless-trace"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
